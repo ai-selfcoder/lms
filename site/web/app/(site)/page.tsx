@@ -5,6 +5,7 @@ import { getAllTaskMeta, getBookChapters } from "@/lib/content";
 import { getAnnouncements, getRecentChapters } from "@/lib/news";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL, absUrl, organizationLd, websiteLd } from "@/lib/seo";
+import { ResumeBlock } from "@/components/landing/ResumeBlock";
 
 export const metadata: Metadata = {
   title: "Бесплатные курсы и учебники по Go (Golang) и операционным системам онлайн",
@@ -87,6 +88,8 @@ export default function HomePage() {
   }));
   const announcements = getAnnouncements();
   const recent = getRecentChapters(6);
+  // Ordered Go task list powers the personalized "resume / next step" block.
+  const goTasks = getAllTaskMeta("go").map((t) => ({ id: t.id, num: t.num, slug: t.slug, title: t.title }));
 
   // Structured data: brand + a catalog of courses so search engines can render
   // rich results and understand the site as an educational platform.
@@ -190,6 +193,9 @@ export default function HomePage() {
               Читать учебник по Go
             </Link>
           </div>
+
+          {/* personalized resume / next-step (client component, local progress) */}
+          <ResumeBlock tasks={goTasks} />
 
           {/* modest free / Pro note */}
           <div className="rise" style={{ display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 24, padding: "9px 14px", border: "var(--border-width) solid var(--border-subtle)", borderRadius: "var(--radius-pill)", background: "var(--bg-elevated)", animationDelay: "150ms" }}>
