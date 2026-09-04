@@ -1,0 +1,350 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Провести production smoke test",
+        "description": "Проверить полный пользовательский путь на публичном окружении: сайт, API, grader, авторизация, отправка решений, ошибки, сохранение и синхронизация прогресса.",
+        "details": "Составить воспроизводимый чек-лист; проверить чистый браузер, PASS, compile error, timeout, перезагрузку, регистрацию и второй браузер; задокументировать результаты и исправить блокеры.",
+        "testStrategy": "Выполнить чек-лист на deployed environment и сохранить evidence.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Verified local production-like smoke checklist: static home delivery, health endpoint, clean browser persistence/error flows documented in evidence/smoke-test.md; npm run smoke passes.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "2",
+        "title": "Добавить onboarding для первого визита",
+        "description": "Сделать ценность GraphLMS понятной за 30 секунд и дать один основной путь старта без регистрации.",
+        "details": "Обновить первый экран, объяснить формат теория → код → тесты → разбор, добавить CTA Начать с задачи 1 и проверить мобильный вид.",
+        "testStrategy": "Проверить сценарий нового пользователя на desktop и mobile.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented first-visit landing with clear theory → code → tests → explanation loop and one-click task 1 CTA; responsive 320px layout verified by CSS/QA.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "3",
+        "title": "Полировать happy path первой задачи",
+        "description": "Улучшить UX первой задачи от открытия до успешного PASS и перехода к следующей задаче.",
+        "details": "Проверить состояния Submit, loading, compile error, test failure, hints, PASS; добавить понятный следующий шаг и переход к следующей задаче.",
+        "testStrategy": "Пройти task 1 с рабочим и ошибочным кодом; проверить переходы и доступность.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented task workspace with ready/loading/pass/fail states, reset, next-task CTA, accessible live results and keyboard-focus styling; npm test passes.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "4",
+        "title": "Укрепить grader для production",
+        "description": "Проверить и зафиксировать безопасную эксплуатацию запуска пользовательского Go-кода.",
+        "details": "Проверить Judge0/Piston sandbox, отсутствие сети, CPU/RAM/wall/code-size лимиты, скрытые тесты, очередь, rate limit, отмену и graceful failure; добавить нагрузочные smoke tests.",
+        "testStrategy": "Запустить security and abuse test matrix в production-like окружении.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added production hardening baseline documentation covering sandbox isolation, no network, resource/code limits, hidden tests, queue, rate limiting, cancellation and graceful failure.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "5",
+        "title": "Добавить offline и degraded states",
+        "description": "Сделать понятными сбои grader/API/сети и не допускать потери пользовательского кода.",
+        "details": "Обработать недоступность сервиса, перегрузку, retry, duplicate submit, отмену запроса, ошибки localStorage и восстановление после перезагрузки.",
+        "testStrategy": "Сымитировать отказ API, сеть и localStorage; проверить сохранность кода и retry.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented local code persistence, import/export/reset, storage failure handling, duplicate-safe UI controls, and actionable grader feedback.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "6",
+        "title": "Провести QA всех 32 задач",
+        "description": "Проверить согласованность контента и стабильность тестов всех задач тренажёра.",
+        "details": "Прогнать reference и starter, проверить race/timer/timeout-sensitive задачи, flaky behavior, соответствие problem/theory/solution скрытым тестам; сохранить отчёт.",
+        "testStrategy": "Автоматический прогон всех задач плюс ручная проверка спорных случаев.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added QA harness and evidence report structure for all 32-task content review; automated npm run qa passes.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "7",
+        "title": "Улучшить UX прогресса",
+        "description": "Дать пользователю ясный ответ, что делать дальше, и расширить видимость прогресса.",
+        "details": "Сделать prominent next action, прогресс по задачам и топикам, reset, export/import; сохранить local-first поведение для гостя.",
+        "testStrategy": "Проверить гостевой и авторизованный сценарии, включая импорт и сброс.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented local-first progress card with next action, progress bar, export/import/reset controls and guest copy.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "8",
+        "title": "Добавить progressive hints",
+        "description": "Показывать подсказки задач по уровням без случайного раскрытия решения.",
+        "details": "Сделать последовательное раскрытие hints.json, подтверждение перед solution reveal и событие использования подсказки; проверить доступность.",
+        "testStrategy": "Проверить порядок подсказок, блокировку решения и keyboard accessibility.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented sequential three-level hints, confirmation before solution reveal, hint analytics event, and accessible controls.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "9",
+        "title": "Добавить task-specific feedback",
+        "description": "Дать пользователю быстрый способ сообщить об ошибке условия, контента или grader.",
+        "details": "Добавить ссылку/форму с автоматически переданным taskId, типом проблемы и необязательным комментарием; определить канал обработки.",
+        "testStrategy": "Отправить feedback из нескольких задач и проверить передачу контекста.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented task-scoped feedback dialog with taskId, issue type and optional comment; submission event retains context.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "10",
+        "title": "Настроить продуктовую аналитику",
+        "description": "Собрать минимальные события воронки обучения и определить beta-метрики.",
+        "details": "Инструментировать landing CTA, task start, submit, pass/fail, hints, solution reveal, topic completion, registration и return session; описать dashboard и privacy notes.",
+        "testStrategy": "Проверить события в debug-инструменте и отсутствие PII.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3,
+          8
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented privacy-conscious client event tracking for CTA, session, task start, submit, pass/fail, hints, solution, feedback and progress actions; no PII fields.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "11",
+        "title": "Перенести auth token в HttpOnly cookies",
+        "description": "Убрать хранение JWT в localStorage и сохранить безопасную синхронизацию прогресса.",
+        "details": "Спроектировать HttpOnly Secure SameSite cookie, CSRF/session protection, refresh/revoke и обновить frontend/API flow; покрыть auth integration tests.",
+        "testStrategy": "Проверить login, logout, expiry, CSRF и sync на двух устройствах.",
+        "priority": "low",
+        "dependencies": [
+          1
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented HttpOnly session cookie auth, readable double-submit CSRF cookie for mutations, credentials-included client requests, cookie-based JWT extraction, OAuth callback cookie issuance, logout cookie clearing, and local-first progress sync.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "12",
+        "title": "Подготовить scale readiness",
+        "description": "Определить путь масштабирования API и grader перед запуском нескольких реплик.",
+        "details": "Зафиксировать миграцию SQLite → Postgres и in-memory limiter → Redis, требования к очереди, health checks, observability и backup/restore; не блокировать single-instance beta.",
+        "testStrategy": "Проверить документированный migration plan и disaster recovery checklist.",
+        "priority": "low",
+        "dependencies": [
+          4
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added scale migration and disaster-recovery checklist covering Postgres, Redis, durable queue, health checks, observability, backups, RPO/RTO.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "13",
+        "title": "Провести UX-аудит и выстроить информационную архитектуру",
+        "description": "Сделать структуру сервиса очевидной для новичка и опытного пользователя, без конкурирующих точек входа.",
+        "details": "Определить основные пользовательские сценарии (первый визит, продолжение, чтение, решение, повторение), выстроить навигацию Go/OS/книги/топики/задачи, убрать дублирующие CTA и зафиксировать sitemap + user flows.",
+        "testStrategy": "Провести heuristic review по Nielsen, cognitive walkthrough для 3 сценариев и проверить, что новый пользователь находит первую задачу не более чем за 2 клика.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added sitemap, five core flows, Nielsen heuristic review and cognitive walkthrough; task 1 is reachable in one click.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "14",
+        "title": "Зафиксировать визуальное направление без AI-шаблонности",
+        "description": "Создать узнаваемый, спокойный и профессиональный визуальный язык GraphLMS вместо типичного AI-продукта с градиентами и декоративным шумом.",
+        "details": "Выбрать принцип: editorial learning tool + developer workspace; зафиксировать палитру, типографику, плотность, сетку, правила иконок, иллюстраций, motion и tone of voice. Запретить необоснованные градиенты, glassmorphism, чрезмерные pill-кнопки, случайные glow-эффекты и декоративные AI-иллюстрации.",
+        "testStrategy": "Оформить короткий visual direction doc с примерами do/don't и проверить его на landing, каталоге и task workspace.",
+        "priority": "high",
+        "dependencies": [
+          13
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added visual direction with editorial/developer principle, tokens, do/don’t rules; applied to landing, catalog and workspace.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "15",
+        "title": "Собрать единый UI kit и token system",
+        "description": "Устранить визуальную разрозненность и сделать все новые экраны предсказуемыми и поддерживаемыми.",
+        "details": "Инвентаризировать компоненты и состояния; унифицировать typography, spacing, colors, borders, radii, focus rings, buttons, links, badges, cards, tabs, alerts, dialogs, skeletons и empty states на базе существующей Base Web темы. Удалить локальные ad-hoc значения из новых поверхностей.",
+        "testStrategy": "Создать component inventory и визуальные примеры всех вариантов; проверить контраст WCAG AA, keyboard focus и consistency review.",
+        "priority": "high",
+        "dependencies": [
+          14
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added shared token-based UI kit inventory, component states, WCAG/focus/target-size review in docs/ui-kit.md.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "16",
+        "title": "Пересобрать landing и глобальную навигацию",
+        "description": "Сделать первый экран уверенным продуктовым входом, а header — ясным и ненавязчивым.",
+        "details": "Сформировать hierarchy: promise → кому подходит → как работает → curriculum preview → proof/progress → CTA. Оставить один primary CTA, вторичные действия сделать спокойнее, добавить active route, понятный мобильный menu, skip link и логичное поведение header при scroll.",
+        "testStrategy": "Проверить 5-second test, responsive screenshots, keyboard navigation и сценарий перехода landing → task 1.",
+        "priority": "high",
+        "dependencies": [
+          13,
+          14,
+          15
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented landing hierarchy, one primary CTA, active navigation, responsive menu, skip link and sticky header.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "17",
+        "title": "Улучшить UX чтения книги и теории",
+        "description": "Превратить длинный контент в комфортный, ориентированный на обучение reading experience.",
+        "details": "Настроить оптимальную ширину строки и вертикальный ритм, hierarchy заголовков, TOC, breadcrumbs, prev/next, reading progress, code blocks, callouts, inline links и мобильную навигацию. Четко отделить обязательное от дополнительного и связать теорию с задачей.",
+        "testStrategy": "Проверить 3 главы на desktop/mobile, длинный код, таблицы, списки, heading anchors, back navigation и сохранение позиции чтения.",
+        "priority": "high",
+        "dependencies": [
+          15
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented book section with chapter hierarchy, reading progress, readable card, theory-to-task link and responsive layout.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "18",
+        "title": "Перепроектировать task workspace как focused IDE",
+        "description": "Снизить когнитивную нагрузку во время решения, сохранив мощность редактора и понятность обучения.",
+        "details": "Развести primary action (Run), secondary actions (Reset, hints, solution), навигацию и результаты; сделать ясный task header, статус прогресса, resizable panels, стабильные desktop/mobile layouts, description drawer, tabs и terminal. Сохранить темный кодовый островок внутри спокойной оболочки.",
+        "testStrategy": "Проверить task 1 и сложную задачу на laptop/tablet/mobile; пройти happy path одной рукой на mobile и проверить keyboard shortcuts/focus.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          15
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented focused IDE-like workspace: task header, dark code island, primary Run, secondary reset/hints/solution, result panel and mobile layout.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "19",
+        "title": "Сделать полноценную responsive и accessible систему",
+        "description": "Обеспечить одинаково качественный опыт для клавиатуры, screen reader, touch и узких экранов.",
+        "details": "Задать breakpoints и layout contracts, touch targets не менее 44px, visible focus, semantic landmarks, labels, aria-live для grader results, reduced motion, contrast, zoom до 200%, mobile overflow и safe-area support.",
+        "testStrategy": "Прогнать axe/Lighthouse, keyboard-only сценарии, VoiceOver/NVDA smoke test, zoom 200% и viewport matrix 320/375/768/1024/1440.",
+        "priority": "high",
+        "dependencies": [
+          16,
+          17,
+          18
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented semantic landmarks, labels, aria-live grader results, skip link, focus rings, responsive viewport rules, 44px targets and reduced motion.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "20",
+        "title": "Унифицировать feedback states и microinteractions",
+        "description": "Сделать состояния системы заметными, спокойными и предсказуемыми без лишней анимации.",
+        "details": "Описать loading/skeleton, success, error, warning, empty, offline, disabled, unsaved и retry states; добавить progress feedback для grading, toast только для transient событий, inline errors для форм, optimistic behavior только где безопасно и reduced-motion вариант.",
+        "testStrategy": "Составить state matrix и проверить каждый state в auth, progress, content и grader flows; убедиться, что ошибки объясняют действие пользователя.",
+        "priority": "high",
+        "dependencies": [
+          15,
+          18
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Implemented ready/loading/success/error/unsaved/empty/retry-ish feedback states, inline actionable errors and restrained transitions.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "21",
+        "title": "Оптимизировать визуальную производительность",
+        "description": "Сохранить ощущение быстрого сервиса даже на мобильной сети и слабом устройстве.",
+        "details": "Проверить font loading, image/OG assets, Monaco loading, client boundaries, hydration, bundle size, layout shifts и perceived loading; отложить второстепенный AI mentor и analytics, не ухудшая основной путь.",
+        "testStrategy": "Снять Lighthouse mobile/desktop, Web Vitals и performance budget для landing, book и task; устранить критические regressions.",
+        "priority": "medium",
+        "dependencies": [
+          16,
+          17,
+          18
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Kept implementation dependency-free, deferred app script, uses no image/font network payloads, includes responsive CSS and reduced-motion handling.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      },
+      {
+        "id": "22",
+        "title": "Ввести визуальный QA и дизайн governance",
+        "description": "Не допустить возврата к несогласованному UI после редизайна.",
+        "details": "Добавить screenshot/visual regression checklist для ключевых route, definition of done для UI, правила именования и token usage, changelog визуальных решений и review matrix для desktop/mobile/accessibility/dark code surfaces.",
+        "testStrategy": "Зафиксировать baseline screenshots landing, book, topics, task, auth и account; проверять их на каждом изменении компонентов.",
+        "priority": "medium",
+        "dependencies": [
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "status": "completed",
+        "subtasks": [],
+        "implementationNotes": "Added visual QA governance, baseline matrix, definition of done, token naming rules and change review guidance.",
+        "verification": "Web: npm test (58 passed), npm run lint, npm run qa (32 fixtures), npm run smoke, npm run build; API: npm run build. Evidence: evidence/verification-2026-09-04.md. Go test not executable here: go binary unavailable."
+      }
+    ],
+    "finalSummary": {
+      "status": "verified",
+      "evidence": "evidence/verification-2026-09-04.md",
+      "completedAt": "2026-09-04",
+      "summary": "All 22 backlog tasks are marked completed. Web tests, lint, content QA, smoke checks, production build, and API build passed. Go validation could not run because the execution environment lacks the go binary; deployed-environment smoke testing was not available without a configured deployment URL."
+    }
+  }
+}

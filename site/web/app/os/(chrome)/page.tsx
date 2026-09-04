@@ -146,7 +146,7 @@ export default function OsProgramPage() {
       <section style={{ borderBottom: "var(--border-width) solid var(--border-subtle)" }}>
         <div style={{ ...WRAP, padding: "52px 28px 38px" }}>
           <p className="rise" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: accent, margin: "0 0 14px" }}>
-            // курс · операционные системы
+            {"// курс · операционные системы"}
           </p>
           <h1 className="rise" style={{ fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: "clamp(32px, 4.6vw, 44px)", lineHeight: 1.06, letterSpacing: "-.025em", margin: 0, maxWidth: "16ch", animationDelay: "50ms" }}>
             Операционные системы

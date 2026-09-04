@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button, Callout, Card, Logo } from "@/ds";
-import { setToken, syncProgress } from "@/lib/auth";
+import { syncProgress } from "@/lib/auth";
 
 const ERROR_MESSAGES: Record<string, string> = {
   access_denied: "Доступ не предоставлен. Попробуй войти ещё раз.",
@@ -18,22 +18,15 @@ function Callback() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = params.get("token");
     const errCode = params.get("error");
-
     if (errCode) {
       setError(ERROR_MESSAGES[errCode] || ERROR_MESSAGES.default);
-      return;
-    }
-    if (!token) {
-      setError(ERROR_MESSAGES.default);
       return;
     }
 
     let cancelled = false;
     (async () => {
-      setToken(token);
-      // Pull server progress and merge into local, then push back.
+      // Session arrives as an HttpOnly cookie; pull server progress and merge.
       await syncProgress();
       if (!cancelled) router.replace("/account");
     })();
@@ -103,7 +96,7 @@ function Callback() {
                   margin: 0,
                 }}
               >
-                // синхронизируем прогресс
+                {"// синхронизируем прогресс"}
               </p>
             </div>
           )}

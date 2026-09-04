@@ -40,7 +40,7 @@ export function ChromeShell({ children }: { children: React.ReactNode }) {
               color: "var(--text-tertiary)",
             }}
           >
-            // интерактивные учебники для инженеров · Go · ОС
+            {"// интерактивные учебники для инженеров · Go · ОС"}
           </span>
         </div>
       </footer>

@@ -141,7 +141,7 @@ export default function HomePage() {
       <section style={{ borderBottom: "var(--border-width) solid var(--border-subtle)" }}>
         <div style={{ ...WRAP, padding: "56px 28px 40px" }}>
           <p className="rise" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-tertiary)", margin: "0 0 16px" }}>
-            // бесплатные курсы по Go (Golang) и операционным системам
+              {"// бесплатные курсы по Go (Golang) и операционным системам"}
           </p>
           <h1 className="rise" style={{ fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: "clamp(30px, 4.4vw, 42px)", lineHeight: 1.08, letterSpacing: "-.025em", margin: 0, maxWidth: "20ch", animationDelay: "50ms" }}>
             Учебники по Go и операционным системам, которые можно <span style={{ color: "var(--accent)" }}>запускать</span>
