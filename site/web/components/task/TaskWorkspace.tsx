@@ -225,6 +225,7 @@ export function TaskWorkspace({
       <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
         {/* left navigator */}
         <aside
+          className="task-workspace-nav"
           style={{
             width: collapsed ? 56 : 300,
             flexShrink: 0,
@@ -265,6 +266,7 @@ export function TaskWorkspace({
 
         {/* right: description tabs */}
         <aside
+          className="task-workspace-description"
           style={{
             width: 380,
             flexShrink: 0,
