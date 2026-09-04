@@ -33,7 +33,10 @@ export function TopicDetailView({
   const firstTask = tasks[0];
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "48px 28px 90px" }}>
+    <div
+      className="topic-detail-root"
+      style={{ maxWidth: 860, margin: "0 auto", padding: "48px 28px 90px" }}
+    >
       {/* breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <Link
@@ -136,6 +139,7 @@ export function TopicDetailView({
 
       {/* prev/next */}
       <nav
+        className="topic-detail-nav"
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -165,6 +169,35 @@ export function TopicDetailView({
           <span style={{ flex: 1 }} />
         )}
       </nav>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .topic-detail-root {
+            padding-bottom: 120px !important;
+          }
+          .topic-detail-nav {
+            position: fixed !important;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 !important;
+            padding: 12px 16px !important;
+            background: var(--bg-elevated);
+            border-top: var(--border-width) solid var(--border-default);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+          }
+          .topic-detail-nav-link {
+            max-width: 48% !important;
+            min-width: 0 !important;
+          }
+          .topic-detail-nav-link span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -225,6 +258,7 @@ function PrevNext({
   return (
     <Link
       href={href}
+      className="topic-detail-nav-link"
       style={{
         display: "flex",
         flexDirection: "column",

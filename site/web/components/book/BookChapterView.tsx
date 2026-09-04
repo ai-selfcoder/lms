@@ -2,8 +2,10 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ProgressBar } from "@/ds";
 import { RunnableMounter } from "@/components/play/RunnableMounter";
+import { markChapterVisited, readReadingState } from "@/components/book/readingProgress";
 
 interface TocItem {
   slug: string;
@@ -50,6 +52,11 @@ export function BookChapterView({
   sectionLabel?: string;
 }) {
   const order2 = String(order).padStart(2, "0");
+  const visitedSlugs = useVisitedSlugs(basePath, slug);
+  const visitedCount = chapters.filter((c) => visitedSlugs.has(c.slug)).length;
+  const readingPct = chapters.length
+    ? Math.round((visitedCount / chapters.length) * 100)
+    : 0;
 
   return (
     <div
@@ -84,6 +91,7 @@ export function BookChapterView({
             key={c.slug}
             chapter={c}
             active={c.slug === slug}
+            visited={visitedSlugs.has(c.slug)}
             basePath={basePath}
           />
         ))}
@@ -137,11 +145,31 @@ export function BookChapterView({
           {title}
         </h1>
 
+        {readingPct > 0 && readingPct < 100 && (
+          <div style={{ marginBottom: 24, maxWidth: 280 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 6,
+                fontSize: "var(--label-sm)",
+                fontFamily: "var(--font-mono)",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              <span>Прогресс учебника</span>
+              <span>{readingPct}%</span>
+            </div>
+            <ProgressBar value={visitedCount} max={chapters.length} tone="accent" size="sm" />
+          </div>
+        )}
+
         <div className="mdx">{children}</div>
         <RunnableMounter />
 
         {/* prev/next */}
         <nav
+          className="book-chapter-nav"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -152,7 +180,11 @@ export function BookChapterView({
           }}
         >
           {prev ? (
-            <PrevNext href={`${basePath}/${prev.slug}`} label="← Назад" title={prev.title} />
+            <PrevNext
+              href={`${basePath}/${prev.slug}`}
+              label="← Назад"
+              title={prev.title}
+            />
           ) : (
             <span style={{ flex: 1 }} />
           )}
@@ -199,6 +231,29 @@ export function BookChapterView({
           .book-chapter-grid { grid-template-columns: minmax(0,1fr) !important; }
           .book-chapter-grid > aside { display: none; }
         }
+        @media (max-width: 640px) {
+          .book-chapter-nav {
+            position: fixed !important;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 !important;
+            padding: 12px 16px !important;
+            background: var(--bg-elevated);
+            border-top: var(--border-width) solid var(--border-default);
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+            z-index: 100;
+          }
+          .book-chapter-nav-link {
+            max-width: 48% !important;
+            min-width: 0 !important;
+          }
+          .book-chapter-nav-link span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
       `}</style>
     </div>
   );
@@ -207,10 +262,12 @@ export function BookChapterView({
 function SideLink({
   chapter,
   active,
+  visited,
   basePath,
 }: {
   chapter: ChapterRef;
   active: boolean;
+  visited: boolean;
   basePath: string;
 }) {
   const [hover, setHover] = useState(false);
@@ -242,11 +299,13 @@ function SideLink({
         style={{
           fontFamily: "var(--font-mono)",
           fontSize: 12,
-          color: "var(--text-tertiary)",
+          color: visited ? "var(--accent-text)" : "var(--text-tertiary)",
           flexShrink: 0,
+          width: 16,
+          textAlign: "center",
         }}
       >
-        {String(chapter.index).padStart(2, "0")}
+        {visited ? "✓" : String(chapter.index).padStart(2, "0")}
       </span>
       <span
         style={{
@@ -298,6 +357,7 @@ function PrevNext({
   return (
     <Link
       href={href}
+      className="book-chapter-nav-link"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -328,4 +388,29 @@ function PrevNext({
       </span>
     </Link>
   );
+}
+
+/**
+ * Client-side reading progress: marks the current chapter as visited on mount
+ * and reactively returns the set of opened chapters of the course.
+ * Purely localStorage-based — no server round-trips, no route changes.
+ */
+function useVisitedSlugs(basePath: string, slug: string): Set<string> {
+  const [visited, setVisited] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    markChapterVisited(basePath, slug);
+    const sync = () => setVisited(new Set(readReadingState(basePath).visited));
+    sync();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key === `goconc.reading.v1.${basePath}`) sync();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [basePath, slug]);
+
+  return visited;
 }

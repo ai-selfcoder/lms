@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Button, ProgressBar } from "@/ds";
+import { readReadingState } from "@/components/book/readingProgress";
 
 export interface BookChapterItem {
   slug: string;
@@ -13,6 +15,21 @@ function TodoMark() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="8.5" stroke="var(--border-strong)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function DoneMark() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.5" stroke="var(--success-fg)" strokeWidth="1.5" />
+      <path
+        d="m8.5 12.5 2.5 2.5 4.5-5"
+        stroke="var(--success-fg)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -37,6 +54,16 @@ export function BookIndexView({
   emptyHref?: string;
   emptyLabel?: string;
 }) {
+  const visited = useVisitedChapters(basePath);
+  const visitedSet = new Set(visited);
+  const visitedCount = chapters.filter((c) => visitedSet.has(c.slug)).length;
+  const lastSlug = useLastChapter(basePath);
+  const lastChapter =
+    lastSlug && chapters.some((c) => c.slug === lastSlug)
+      ? chapters.find((c) => c.slug === lastSlug)!
+      : null;
+  const resumeTarget = lastChapter ?? (chapters.length ? chapters[0] : null);
+
   return (
     <div
       style={{
@@ -86,6 +113,51 @@ export function BookIndexView({
         <EmptyState href={emptyHref} label={emptyLabel} />
       ) : (
         <div style={{ marginTop: 24 }}>
+          {/* resume / progress card */}
+          {visitedCount > 0 && resumeTarget ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
+                flexWrap: "wrap",
+                padding: "16px 18px",
+                background: "var(--bg-elevated)",
+                border: "var(--border-width) solid var(--border-default)",
+                borderRadius: "var(--radius-lg)",
+                marginBottom: 28,
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--label-xs)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                    color: "var(--text-tertiary)",
+                    margin: "0 0 8px",
+                  }}
+                >
+                  Прогресс чтения · {visitedCount}/{chapters.length}
+                </div>
+                <ProgressBar
+                  value={visitedCount}
+                  max={chapters.length}
+                  tone={visitedCount === chapters.length ? "success" : "accent"}
+                  size="sm"
+                />
+              </div>
+              {visitedCount < chapters.length ? (
+                <Link href={`${basePath}/${resumeTarget.slug}`}>
+                  <Button hierarchy="accent" size="md" iconRight={<ArrowRight />}>
+                    Продолжить
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+
           <div
             style={{
               fontFamily: "var(--font-mono)",
@@ -100,7 +172,13 @@ export function BookIndexView({
           </div>
           <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
             {chapters.map((c, i) => (
-              <ChapterRow key={c.slug} chapter={c} index={i + 1} basePath={basePath} />
+              <ChapterRow
+                key={c.slug}
+                chapter={c}
+                index={i + 1}
+                basePath={basePath}
+                visited={visitedSet.has(c.slug)}
+              />
             ))}
           </ol>
         </div>
@@ -113,10 +191,12 @@ function ChapterRow({
   chapter,
   index,
   basePath,
+  visited,
 }: {
   chapter: BookChapterItem;
   index: number;
   basePath: string;
+  visited: boolean;
 }) {
   const [hover, setHover] = useState(false);
   return (
@@ -137,7 +217,7 @@ function ChapterRow({
         }}
       >
         <span style={{ flexShrink: 0, display: "inline-flex" }}>
-          <TodoMark />
+          {visited ? <DoneMark /> : <TodoMark />}
         </span>
         <span
           style={{
@@ -180,6 +260,40 @@ function ChapterRow({
       </Link>
     </li>
   );
+}
+
+function ArrowRight() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+/** Reactive set of visited chapter slugs for a course basePath. */
+function useVisitedChapters(basePath: string): string[] {
+  const [visited, setVisited] = useState<string[]>([]);
+  useEffect(() => {
+    const sync = () => setVisited(readReadingState(basePath).visited);
+    sync();
+    const onStorage = () => sync();
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [basePath]);
+  return visited;
+}
+
+/** Slug of the last opened chapter (null on server / before first visit). */
+function useLastChapter(basePath: string): string | null {
+  const [last, setLast] = useState<string | null>(null);
+  useEffect(() => {
+    const sync = () => setLast(readReadingState(basePath).last);
+    sync();
+    const onStorage = () => sync();
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [basePath]);
+  return last;
 }
 
 function EmptyState({ href, label }: { href: string; label: string }) {
