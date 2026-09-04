@@ -1,0 +1,13 @@
+{
+  "id": "03",
+  "num": 3,
+  "topic": "ОС · Память",
+  "slug": "va-translate",
+  "title": "Трансляция адреса: base-and-bounds",
+  "type": "functional",
+  "difficulty": "easy",
+  "tags": [
+    "memory",
+    "translation"
+  ]
+}

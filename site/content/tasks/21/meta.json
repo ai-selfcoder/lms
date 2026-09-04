@@ -1,0 +1,10 @@
+{
+  "id": "21",
+  "num": 21,
+  "topic": "Топик 6 · Code Review",
+  "title": "Сервис агрегации метрик",
+  "type": "review",
+  "slug": "metrics-aggregator-review",
+  "difficulty": "hard",
+  "tags": ["code-review", "data-race", "goroutine-leak", "slice-aliasing", "graceful-shutdown", "single-writer"]
+}

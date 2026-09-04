@@ -1,0 +1,13 @@
+{
+  "id": "04",
+  "num": 4,
+  "topic": "ОС · Память",
+  "slug": "paging-translate",
+  "title": "Страничная трансляция адреса",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "memory",
+    "paging"
+  ]
+}

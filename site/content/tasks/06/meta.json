@@ -1,0 +1,10 @@
+{
+  "id": "06",
+  "num": 6,
+  "topic": "Топик 2 · Синхронизация и sync",
+  "title": "Потокобезопасный кэш (95% reads)",
+  "type": "functional",
+  "slug": "rwmutex-cache",
+  "difficulty": "easy",
+  "tags": ["rwmutex", "map", "read-heavy"]
+}

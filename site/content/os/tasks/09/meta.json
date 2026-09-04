@@ -1,0 +1,14 @@
+{
+  "id": "09",
+  "num": 9,
+  "topic": "ОС · Persistence",
+  "slug": "disk-seek",
+  "title": "Суммарное перемещение головки диска",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "persistence",
+    "disk",
+    "scheduling"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "05",
+  "num": 5,
+  "topic": "ОС · Память",
+  "slug": "lru-misses",
+  "title": "LRU: число промахов",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "memory",
+    "replacement",
+    "lru"
+  ]
+}

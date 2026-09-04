@@ -1,0 +1,7 @@
+{
+  "id": "10",
+  "num": 10,
+  "topic": "Топик 3 · Паттерны конкурентности",
+  "title": "Bounded Worker Pool с обработкой ошибок",
+  "type": "functional"
+}

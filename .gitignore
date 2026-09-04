@@ -1,0 +1,49 @@
+# Third-party clone (Uber Base Web) — not part of this repo
+baseweb/
+
+# Redundant archive (extracted to trainer/)
+trainer.zip
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Builds / output
+dist/
+build/
+out/
+.next/
+.turbo/
+.cache/
+coverage/
+
+# Go
+*.exe
+*.test
+*.out
+bin/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.local
+.mcp.json
+
+# Local agent config
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

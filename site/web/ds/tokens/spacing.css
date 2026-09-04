@@ -1,0 +1,73 @@
+/* ════════════════════════════════════════════════════════════════════════
+   SPACING · RADIUS · SHADOW · MOTION · FOCUS — Goroutine
+   4px base grid. Restrained elevation (flat surfaces, hairline borders carry
+   most of the hierarchy). Motion is quick and unfussy.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Spacing (4px grid) */
+  --space-0:  0;
+  --space-1:  2px;
+  --space-2:  4px;
+  --space-3:  8px;
+  --space-4:  12px;
+  --space-5:  16px;
+  --space-6:  20px;
+  --space-7:  24px;
+  --space-8:  32px;
+  --space-9:  40px;
+  --space-10: 48px;
+  --space-11: 64px;
+  --space-12: 80px;
+  --space-13: 96px;
+  --space-14: 128px;
+
+  /* Radius */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-pill: 999px;
+
+  /* Borders */
+  --border-width: 1px;
+  --border-width-strong: 1.5px;
+
+  /* Elevation — soft, low-spread; dark UI leans on borders, not big shadows */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.30);
+  --shadow-sm:  0 2px 6px rgba(0,0,0,0.36);
+  --shadow-md:  0 6px 20px rgba(0,0,0,0.44);
+  --shadow-lg:  0 16px 40px rgba(0,0,0,0.52);
+  --shadow-pop: 0 12px 32px rgba(0,0,0,0.50), 0 0 0 1px var(--border-default);
+
+  /* Glow — accent / status emphasis (used sparingly on the runner verdict) */
+  --glow-accent:  0 0 0 1px rgba(39,110,241,0.5), 0 0 24px rgba(39,110,241,0.25);
+  --glow-success: 0 0 0 1px rgba(47,207,126,0.5), 0 0 24px rgba(47,207,126,0.22);
+  --glow-error:   0 0 0 1px rgba(255,92,108,0.5), 0 0 24px rgba(255,92,108,0.22);
+
+  /* Focus ring (accessibility — AA visible) */
+  --focus-ring:  0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--blue-400);
+  --focus-ring-inset: inset 0 0 0 2px var(--blue-400);
+
+  /* Motion */
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-in-out:cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-fast:   120ms; /* @kind other */
+  --dur-base:   180ms; /* @kind other */
+  --dur-slow:   280ms; /* @kind other */
+
+  /* Layout */
+  --container-max: 1200px; /* @kind other */
+  --header-h: 56px;
+  --hit-min: 40px;   /* minimum interactive hit target */
+
+  /* Z-index */
+  --z-base: 1; /* @kind other */
+  --z-sticky: 100; /* @kind other */
+  --z-header: 200; /* @kind other */
+  --z-overlay: 900; /* @kind other */
+  --z-modal: 1000; /* @kind other */
+  --z-toast: 1100; /* @kind other */
+}

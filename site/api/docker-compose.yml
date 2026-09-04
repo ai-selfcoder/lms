@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: "file:./prisma/dev.db"
+      JWT_SECRET: change-me-dev-secret
+      PORT: "4000"
+      CORS_ORIGIN: http://localhost:3000
+    volumes:
+      # Persist the SQLite file across container restarts.
+      - api-db:/app/prisma
+
+# To switch to Postgres: drop the volume above, set
+#   DATABASE_URL: "postgresql://goroutine:goroutine@db:5432/goroutine?schema=public"
+# add a `db: image: postgres:16` service, and change provider="postgresql" in prisma/schema.prisma.
+volumes:
+  api-db:

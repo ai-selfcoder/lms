@@ -1,0 +1,14 @@
+{
+  "id": "12",
+  "num": 12,
+  "topic": "ОС · Persistence",
+  "slug": "wal-replay",
+  "title": "WAL: восстановление по журналу",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "persistence",
+    "wal",
+    "durability"
+  ]
+}

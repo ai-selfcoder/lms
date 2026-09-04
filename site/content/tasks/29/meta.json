@@ -1,0 +1,10 @@
+{
+  "id": "29",
+  "num": 29,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Fan-Out с маршрутизацией по тегам (Pub/Sub)",
+  "type": "functional",
+  "slug": "pubsub-fanout-routing",
+  "difficulty": "medium",
+  "tags": ["pub-sub", "fan-out", "routing", "sync-primitives", "channels", "concurrency"]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "27",
+  "num": 27,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Rate-Limited Pipeline (2 стадии, 50 RPS)",
+  "type": "functional",
+  "slug": "rate-limited-pipeline",
+  "difficulty": "medium",
+  "tags": ["pipeline", "rate-limiting", "ticker", "worker-pool", "channels"]
+}

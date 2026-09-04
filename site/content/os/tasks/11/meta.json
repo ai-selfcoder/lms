@@ -1,0 +1,14 @@
+{
+  "id": "11",
+  "num": 11,
+  "topic": "ОС · Persistence",
+  "slug": "inode-maxsize",
+  "title": "Максимальный размер файла по inode",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "persistence",
+    "filesystem",
+    "inode"
+  ]
+}

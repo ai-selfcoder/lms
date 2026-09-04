@@ -1,0 +1,13 @@
+{
+  "id": "06",
+  "num": 6,
+  "topic": "ОС · Память",
+  "slug": "free-list",
+  "title": "Аллокатор: first-fit",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "memory",
+    "allocator"
+  ]
+}

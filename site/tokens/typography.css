@@ -1,0 +1,56 @@
+/* ════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY — Goroutine
+   Two families: Geist (UI grotesk) and Geist Mono (code & numeric accents).
+   The scale is compact and information-dense — these are long coding sessions,
+   not marketing fluff. Display sizes appear only on the landing page.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Families */
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* Weights */
+  --fw-regular: 400; /* @kind font */
+  --fw-medium:  500; /* @kind font */
+  --fw-semibold:600; /* @kind font */
+  --fw-bold:    700; /* @kind font */
+
+  /* Type scale (px) — name: size / line-height / tracking */
+  --display-xl:  64px;  --display-xl-lh:  68px;  --display-xl-ls: -0.022em;
+  --display-lg:  52px;  --display-lg-lh:  56px;  --display-lg-ls: -0.021em;
+  --display-md:  40px;  --display-md-lh:  46px;  --display-md-ls: -0.02em;
+
+  --heading-xl:  32px;  --heading-xl-lh:  38px;  --heading-xl-ls: -0.018em;
+  --heading-lg:  26px;  --heading-lg-lh:  32px;  --heading-lg-ls: -0.015em;
+  --heading-md:  20px;  --heading-md-lh:  26px;  --heading-md-ls: -0.011em;
+  --heading-sm:  16px;  --heading-sm-lh:  22px;  --heading-sm-ls: -0.006em;
+
+  --body-lg:     17px;  --body-lg-lh:    28px;  --body-lg-ls: -0.003em;
+  --body-md:     15px;  --body-md-lh:    24px;  --body-md-ls: -0.002em;
+  --body-sm:     13px;  --body-sm-lh:    20px;  --body-sm-ls: 0; /* @kind other */
+
+  --label-lg:    15px;  --label-lg-lh:   20px;  --label-lg-ls: -0.002em;
+  --label-md:    13px;  --label-md-lh:   16px;  --label-md-ls: 0; /* @kind other */
+  --label-sm:    12px;  --label-sm-lh:   16px;  --label-sm-ls: 0.002em;
+  --label-xs:    11px;  --label-xs-lh:   14px;  --label-xs-ls: 0.04em;   /* uppercase eyebrows */
+
+  --code-lg:     14px;  --code-lg-lh:    22px;
+  --code-md:     13px;  --code-md-lh:    20px;
+  --code-sm:     12px;  --code-sm-lh:    18px;
+}
+
+/* Optional helper classes — components reference the vars directly, but these
+   make the specimen cards and prose pages terse. */
+.t-display-lg { font-family: var(--font-sans); font-weight: var(--fw-bold);     font-size: var(--display-lg); line-height: var(--display-lg-lh); letter-spacing: var(--display-lg-ls); }
+.t-display-md { font-family: var(--font-sans); font-weight: var(--fw-bold);     font-size: var(--display-md); line-height: var(--display-md-lh); letter-spacing: var(--display-md-ls); }
+.t-heading-xl { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: var(--heading-xl); line-height: var(--heading-xl-lh); letter-spacing: var(--heading-xl-ls); }
+.t-heading-lg { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: var(--heading-lg); line-height: var(--heading-lg-lh); letter-spacing: var(--heading-lg-ls); }
+.t-heading-md { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: var(--heading-md); line-height: var(--heading-md-lh); letter-spacing: var(--heading-md-ls); }
+.t-heading-sm { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: var(--heading-sm); line-height: var(--heading-sm-lh); letter-spacing: var(--heading-sm-ls); }
+.t-body-lg    { font-family: var(--font-sans); font-weight: var(--fw-regular);  font-size: var(--body-lg);    line-height: var(--body-lg-lh);    letter-spacing: var(--body-lg-ls); }
+.t-body-md    { font-family: var(--font-sans); font-weight: var(--fw-regular);  font-size: var(--body-md);    line-height: var(--body-md-lh);    letter-spacing: var(--body-md-ls); }
+.t-body-sm    { font-family: var(--font-sans); font-weight: var(--fw-regular);  font-size: var(--body-sm);    line-height: var(--body-sm-lh);    letter-spacing: var(--body-sm-ls); }
+.t-label-md   { font-family: var(--font-sans); font-weight: var(--fw-medium);   font-size: var(--label-md);   line-height: var(--label-md-lh);   letter-spacing: var(--label-md-ls); }
+.t-eyebrow    { font-family: var(--font-mono); font-weight: var(--fw-medium);   font-size: var(--label-xs);   line-height: var(--label-xs-lh);   letter-spacing: var(--label-xs-ls); text-transform: uppercase; }
+.t-code-md    { font-family: var(--font-mono); font-weight: var(--fw-regular);  font-size: var(--code-md);    line-height: var(--code-md-lh); }

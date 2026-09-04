@@ -1,0 +1,10 @@
+{
+  "id": "16",
+  "num": 16,
+  "topic": "Топик 5 · Highload-задачи",
+  "title": "Token Bucket Rate Limiter",
+  "type": "functional",
+  "slug": "token-bucket-rate-limiter",
+  "difficulty": "medium",
+  "tags": ["rate-limiting", "token-bucket", "mutex", "atomic", "highload"]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "24",
+  "num": 24,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Panic-Safe Worker Pool",
+  "type": "functional",
+  "slug": "panic-safe-worker-pool",
+  "difficulty": "medium",
+  "tags": ["worker-pool", "panic", "recover", "sync", "fault-tolerance"]
+}

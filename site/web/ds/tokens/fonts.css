@@ -1,0 +1,11 @@
+/* ── Webfonts ───────────────────────────────────────────────────────────
+   UI grotesk: Geist  ·  Code: Geist Mono
+
+   Geist is now SELF-HOSTED via next/font (the `geist` package) in
+   app/layout.tsx — it sets --font-geist-sans / --font-geist-mono on <html>,
+   and ds/tokens/typography.css maps --font-sans / --font-mono onto them.
+
+   The old `@import url(https://fonts.googleapis.com/...)` was render-blocking
+   and depended on an external domain that is slow/unreliable in some regions
+   (notably .ru), which stalled every page. Do NOT re-add it.
+*/

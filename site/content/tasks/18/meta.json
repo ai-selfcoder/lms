@@ -1,0 +1,10 @@
+{
+  "id": "18",
+  "num": 18,
+  "topic": "Топик 5 · Highload-задачи",
+  "title": "Singleflight",
+  "type": "functional",
+  "slug": "singleflight",
+  "difficulty": "medium",
+  "tags": ["singleflight", "deduplication", "mutex", "waitgroup", "cache-stampede", "highload"]
+}

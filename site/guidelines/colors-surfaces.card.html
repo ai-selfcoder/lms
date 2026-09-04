@@ -1,0 +1,27 @@
+<!-- @dsCard group="Colors" viewport="700x180" name="Surfaces & text" subtitle="Dark elevation ladder and text on dark" -->
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+ body{margin:0;padding:20px;background:var(--bg-canvas)}
+ .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+ .sw{height:72px;border-radius:var(--radius-md);border:1px solid var(--border-default);display:flex;flex-direction:column;justify-content:flex-end;padding:8px}
+ .n{font-family:var(--font-sans);font-size:12px;color:var(--text-primary)}
+ .v{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary)}
+ .text{display:flex;gap:20px;align-items:baseline}
+ .text span{font-size:15px}
+</style></head><body>
+ <div class="grid">
+  <div class="sw" style="background:var(--bg-canvas)"><span class="n">canvas</span><span class="v">grey-1000</span></div>
+  <div class="sw" style="background:var(--bg-surface)"><span class="n">surface</span><span class="v">grey-900</span></div>
+  <div class="sw" style="background:var(--bg-elevated)"><span class="n">elevated</span><span class="v">grey-850</span></div>
+  <div class="sw" style="background:var(--bg-inset)"><span class="n">inset</span><span class="v">grey-950</span></div>
+  <div class="sw" style="background:var(--bg-terminal)"><span class="n">terminal</span><span class="v">#08090b</span></div>
+ </div>
+ <div class="text">
+  <span style="color:var(--text-primary)">Primary</span>
+  <span style="color:var(--text-secondary)">Secondary</span>
+  <span style="color:var(--text-tertiary)">Tertiary</span>
+  <span style="color:var(--text-disabled)">Disabled</span>
+  <span style="color:var(--text-link)">Ссылка</span>
+ </div>
+</body></html>

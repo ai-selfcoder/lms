@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Go Interview Trainer</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #2f81f7; --green: #3fb950;
+    --red: #f85149; --yellow: #d29922; --topic: #7d8590;
+    --sidebar-w: 270px; --desc-w: 420px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--text); height: 100vh; overflow: hidden;
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 6px var(--desc-w);
+    transition: grid-template-columns .18s ease;
+  }
+  body.nav-collapsed { --sidebar-w: 0px; }
+
+  /* ---- sidebar (left, collapsible) ---- */
+  #sidebar { background: var(--panel); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  body.nav-collapsed #sidebar { border-right: none; }
+  #sidebar header { padding: 14px 16px; border-bottom: 1px solid var(--border); min-width: var(--sidebar-w); }
+  #sidebar header h1 { font-size: 14px; margin: 0; letter-spacing: .3px; white-space: nowrap; }
+  #sidebar header .sub { color: var(--muted); font-size: 12px; margin-top: 3px; white-space: nowrap; }
+  #progress-bar { height: 4px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+  #progress-bar > div { height: 100%; background: var(--green); width: 0; transition: width .3s; }
+  #tasklist { overflow-y: auto; flex: 1; padding: 6px 0 30px; min-width: var(--sidebar-w); }
+  .topic { color: var(--topic); font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+    padding: 14px 16px 6px; font-weight: 600; }
+  .task { display: flex; align-items: center; gap: 9px; padding: 7px 16px; cursor: pointer;
+    font-size: 13px; color: var(--text); border-left: 2px solid transparent; }
+  .task:hover { background: #1c2330; }
+  .task.active { background: #1f2937; border-left-color: var(--accent); }
+  .task .num { color: var(--muted); font-variant-numeric: tabular-nums; width: 20px; flex: none; }
+  .task .ttl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .task .mark { margin-left: auto; flex: none; font-size: 12px; }
+  .task.solved .mark { color: var(--green); }
+  .task .typ { font-size: 10px; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0 4px; flex: none; }
+
+  /* ---- main (center): editor + terminal ---- */
+  #main { display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+  #topbar { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex;
+    align-items: center; gap: 12px; }
+  #navToggle { font-size: 16px; line-height: 1; padding: 6px 10px; }
+  #topbar .meta { min-width: 0; }
+  #topbar .crumbs { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #topbar h2 { font-size: 15px; margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #topbar .nav { margin-left: auto; display: flex; gap: 8px; flex: none; }
+  button { font: inherit; font-size: 13px; border: 1px solid var(--border); background: #21262d;
+    color: var(--text); border-radius: 7px; padding: 7px 12px; cursor: pointer; }
+  button:hover { background: #2a313c; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .5; cursor: default; }
+  #editorBar { display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+    border-bottom: 1px solid var(--border); background: var(--panel); }
+  #editorBar .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+  #editor { flex: 1; min-height: 0; }
+
+  /* horizontal gutter between editor and terminal */
+  #hGutter { height: 6px; background: var(--border); cursor: row-resize; flex: none; }
+  #hGutter:hover { background: var(--accent); }
+
+  /* ---- terminal (bottom) ---- */
+  #terminal { height: 240px; min-height: 90px; border-top: 1px solid var(--border);
+    background: #0a0d12; display: flex; flex-direction: column; flex: none; }
+  #resBar { padding: 7px 14px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border); font-size: 13px; }
+  #resBar .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  #verdict { font-weight: 700; }
+  #verdict.pass { color: var(--green); } #verdict.fail { color: var(--red); }
+  #verdict.run { color: var(--yellow); }
+  #resOut { flex: 1; overflow: auto; margin: 0; padding: 11px 14px; font-size: 12.5px;
+    line-height: 1.5; white-space: pre-wrap; font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    color: #c9d1d9; }
+
+  /* vertical gutter between main and description */
+  #vGutter { background: var(--border); cursor: col-resize; }
+  #vGutter:hover { background: var(--accent); }
+
+  /* ---- description (right) ---- */
+  #descPanel { background: #0c1118; border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+  #descPanel .dhead { padding: 10px 18px; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; }
+  #desc { overflow-y: auto; padding: 6px 22px 40px; flex: 1; }
+  #desc h1,#desc h2,#desc h3 { line-height:1.3; }
+  #desc h1 { font-size: 18px; } #desc h2 { font-size: 15px; } #desc h3 { font-size: 14px; }
+  #desc p, #desc li { font-size: 13.5px; line-height: 1.65; color: #cdd6e0; }
+  #desc code { background: #1f2733; padding: 1px 5px; border-radius: 4px; font-size: 12.5px;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+  #desc pre { background: #11161d; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; overflow-x: auto; }
+  #desc pre code { background: none; padding: 0; }
+  #desc blockquote { border-left: 3px solid var(--accent); margin: 10px 0; padding: 2px 14px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 40px; text-align: center; }
+</style>
+</head>
+<body>
+  <aside id="sidebar">
+    <header>
+      <h1>⚙️ Go Interview Trainer</h1>
+      <div class="sub">Платформа · Concurrency · 32 задачи</div>
+      <div id="progress-bar"><div></div></div>
+      <div class="sub" id="progressText" style="margin-top:6px"></div>
+    </header>
+    <div id="tasklist"></div>
+  </aside>
+
+  <main id="main">
+    <div id="topbar">
+      <button id="navToggle" title="Свернуть/развернуть меню (⌘B)">☰</button>
+      <div class="meta">
+        <div class="crumbs" id="crumbs"></div>
+        <h2 id="title">Загрузка…</h2>
+      </div>
+      <div class="nav">
+        <button id="prevBtn">← Назад</button>
+        <button id="nextBtn">Дальше →</button>
+      </div>
+    </div>
+
+    <div id="editorBar">
+      <button class="primary" id="runBtn">▶ Запустить тесты <span style="opacity:.7">⌘↵</span></button>
+      <button id="resetBtn">Сбросить</button>
+      <span class="hint" id="saveHint"></span>
+    </div>
+    <div id="editor"></div>
+
+    <div id="hGutter"></div>
+
+    <div id="terminal">
+      <div id="resBar">
+        <span class="label">Терминал</span>
+        <span id="verdict">—</span>
+        <span id="resMeta" style="color:var(--muted)"></span>
+      </div>
+      <pre id="resOut">Реши задачу и нажми «Запустить тесты». Решение прогонится через go test -race.</pre>
+    </div>
+  </main>
+
+  <div id="vGutter"></div>
+
+  <aside id="descPanel">
+    <div class="dhead">Условие</div>
+    <div id="desc"><div class="empty">Выберите задачу слева</div></div>
+  </aside>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
+<script>
+let TASKS = [], current = null, editor = null, saveTimer = null;
+
+const api = {
+  tasks: () => fetch('/api/tasks').then(r => r.json()),
+  run:  (id, code) => fetch('/api/run',  {method:'POST', body: JSON.stringify({id, code})}).then(r=>r.json()),
+  save: (id, code) => fetch('/api/save', {method:'POST', body: JSON.stringify({id, code})}),
+  reset:(id) => fetch('/api/reset', {method:'POST', body: JSON.stringify({id})}).then(r=>r.json()),
+};
+
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' }});
+require(['vs/editor/editor.main'], async function () {
+  editor = monaco.editor.create(document.getElementById('editor'), {
+    value: '', language: 'go', theme: 'vs-dark', automaticLayout: true,
+    fontSize: 14, minimap: { enabled: false }, scrollBeyondLastLine: false,
+    fontFamily: 'SF Mono, Menlo, monospace', tabSize: 4,
+    renderLineHighlight: 'all', padding: { top: 12 },
+  });
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runCurrent);
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyB, toggleNav);
+  editor.onDidChangeModelContent(scheduleSave);
+  await boot();
+});
+
+async function boot() {
+  TASKS = await api.tasks();
+  renderSidebar();
+  updateProgress();
+  if (localStorage.getItem('navCollapsed') === '1') document.body.classList.add('nav-collapsed');
+  const last = localStorage.getItem('lastTask');
+  const start = TASKS.find(t => t.id === last) || TASKS[0];
+  if (start) selectTask(start.id);
+}
+
+function renderSidebar() {
+  const list = document.getElementById('tasklist');
+  list.innerHTML = '';
+  let topic = null;
+  for (const t of TASKS) {
+    if (t.topic !== topic) {
+      topic = t.topic;
+      const h = document.createElement('div');
+      h.className = 'topic'; h.textContent = topic;
+      list.appendChild(h);
+    }
+    const el = document.createElement('div');
+    el.className = 'task' + (t.solved ? ' solved' : '') + (current && current.id === t.id ? ' active' : '');
+    el.dataset.id = t.id;
+    el.innerHTML = `<span class="num">${t.num}</span>
+      <span class="ttl">${t.title}</span>
+      ${t.type === 'review' ? '<span class="typ">review</span>' : ''}
+      <span class="mark">${t.solved ? '✓' : ''}</span>`;
+    el.onclick = () => selectTask(t.id);
+    list.appendChild(el);
+  }
+}
+
+function updateProgress() {
+  const solved = TASKS.filter(t => t.solved).length;
+  document.querySelector('#progress-bar > div').style.width = (solved / TASKS.length * 100) + '%';
+  document.getElementById('progressText').textContent = `Решено ${solved} из ${TASKS.length}`;
+}
+
+function selectTask(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  current = t;
+  localStorage.setItem('lastTask', id);
+  document.getElementById('crumbs').textContent = t.topic;
+  document.getElementById('title').textContent = `Задача ${t.num}: ${t.title}`;
+  document.getElementById('desc').innerHTML = marked.parse(t.description || '');
+  document.getElementById('desc').scrollTop = 0;
+  if (editor) editor.setValue(t.saved || t.starter || '');
+  resetResults();
+  renderSidebar();
+  const idx = TASKS.findIndex(x => x.id === id);
+  document.getElementById('prevBtn').disabled = idx <= 0;
+  document.getElementById('nextBtn').disabled = idx >= TASKS.length - 1;
+}
+
+function resetResults() {
+  setVerdict('—', ''); document.getElementById('resMeta').textContent = '';
+  document.getElementById('resOut').textContent =
+    'Реши задачу и нажми «Запустить тесты». Решение прогонится через go test -race.';
+}
+function setVerdict(text, cls) {
+  const v = document.getElementById('verdict');
+  v.textContent = text; v.className = cls;
+}
+
+function scheduleSave() {
+  if (!current) return;
+  document.getElementById('saveHint').textContent = '…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const code = editor.getValue();
+    const t = TASKS.find(x => x.id === current.id); if (t) t.saved = code;
+    api.save(current.id, code).then(() => {
+      document.getElementById('saveHint').textContent = 'сохранено';
+      setTimeout(() => { document.getElementById('saveHint').textContent = ''; }, 1200);
+    });
+  }, 600);
+}
+
+async function runCurrent() {
+  if (!current) return;
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  setVerdict('⏳ Прогон…', 'run');
+  document.getElementById('resMeta').textContent = 'go test -race';
+  document.getElementById('resOut').textContent = 'Компиляция и запуск тестов…';
+  const code = editor.getValue();
+  try {
+    const res = await api.run(current.id, code);
+    if (res.pass) {
+      setVerdict('✓ PASS', 'pass');
+      const t = TASKS.find(x => x.id === current.id); if (t) t.solved = true;
+      renderSidebar(); updateProgress();
+    } else {
+      setVerdict(res.timedOut ? '✗ TIMEOUT' : '✗ FAIL', 'fail');
+    }
+    document.getElementById('resMeta').textContent = `за ${res.duration}`;
+    document.getElementById('resOut').textContent = res.output || '(нет вывода)';
+  } catch (e) {
+    setVerdict('✗ ERROR', 'fail');
+    document.getElementById('resOut').textContent = String(e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function resetCurrent() {
+  if (!current) return;
+  if (!confirm('Сбросить решение к стартовому коду? Твой код будет удалён.')) return;
+  const r = await api.reset(current.id);
+  const t = TASKS.find(x => x.id === current.id);
+  if (t) t.saved = r.starter;
+  editor.setValue(r.starter || '');
+  resetResults();
+}
+
+function toggleNav() {
+  document.body.classList.toggle('nav-collapsed');
+  localStorage.setItem('navCollapsed', document.body.classList.contains('nav-collapsed') ? '1' : '0');
+}
+
+document.getElementById('runBtn').onclick = runCurrent;
+document.getElementById('resetBtn').onclick = resetCurrent;
+document.getElementById('navToggle').onclick = toggleNav;
+document.getElementById('prevBtn').onclick = () => {
+  const i = TASKS.findIndex(x => x.id === current.id);
+  if (i > 0) selectTask(TASKS[i-1].id);
+};
+document.getElementById('nextBtn').onclick = () => {
+  const i = TASKS.findIndex(x => x.id === current.id);
+  if (i < TASKS.length-1) selectTask(TASKS[i+1].id);
+};
+
+// horizontal gutter: resize terminal height
+(function () {
+  const g = document.getElementById('hGutter'), term = document.getElementById('terminal'), main = document.getElementById('main');
+  let drag = false;
+  g.addEventListener('mousedown', e => { drag = true; document.body.style.cursor = 'row-resize'; e.preventDefault(); });
+  window.addEventListener('mouseup', () => { drag = false; document.body.style.cursor = ''; });
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const h = Math.min(main.clientHeight - 160, Math.max(90, main.getBoundingClientRect().bottom - e.clientY));
+    term.style.height = h + 'px';
+  });
+})();
+
+// vertical gutter: resize description panel width
+(function () {
+  const g = document.getElementById('vGutter');
+  let drag = false;
+  g.addEventListener('mousedown', e => { drag = true; document.body.style.cursor = 'col-resize'; e.preventDefault(); });
+  window.addEventListener('mouseup', () => { drag = false; document.body.style.cursor = ''; });
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const w = Math.min(window.innerWidth * 0.6, Math.max(260, window.innerWidth - e.clientX));
+    document.documentElement.style.setProperty('--desc-w', w + 'px');
+  });
+})();
+</script>
+</body>
+</html>

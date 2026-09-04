@@ -1,0 +1,26 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Radius & elevation" subtitle="Corner radii and the restrained shadow set" -->
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+ body{margin:0;padding:24px;background:var(--bg-canvas);display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+ .group{display:flex;gap:14px;align-items:flex-end}
+ .col{display:flex;flex-direction:column;align-items:center;gap:8px}
+ .r{width:56px;height:56px;background:var(--bg-elevated);border:1px solid var(--border-strong)}
+ .e{width:80px;height:56px;background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-md)}
+ .n{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary)}
+ .sep{width:1px;height:70px;background:var(--border-subtle)}
+</style></head><body>
+ <div class="group">
+  <div class="col"><div class="r" style="border-radius:var(--radius-sm)"></div><span class="n">sm 6</span></div>
+  <div class="col"><div class="r" style="border-radius:var(--radius-md)"></div><span class="n">md 8</span></div>
+  <div class="col"><div class="r" style="border-radius:var(--radius-lg)"></div><span class="n">lg 12</span></div>
+  <div class="col"><div class="r" style="border-radius:var(--radius-xl)"></div><span class="n">xl 16</span></div>
+ </div>
+ <div class="sep"></div>
+ <div class="group">
+  <div class="col"><div class="e" style="box-shadow:var(--shadow-sm)"></div><span class="n">sm</span></div>
+  <div class="col"><div class="e" style="box-shadow:var(--shadow-md)"></div><span class="n">md</span></div>
+  <div class="col"><div class="e" style="box-shadow:var(--shadow-lg)"></div><span class="n">lg</span></div>
+  <div class="col"><div class="e" style="box-shadow:var(--glow-accent)"></div><span class="n">glow</span></div>
+ </div>
+</body></html>

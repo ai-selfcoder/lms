@@ -1,0 +1,125 @@
+# Full stack for the Go concurrency trainer grader + self-hosted Judge0 sandbox.
+#
+#   docker compose -f infra/docker-compose.yml up -d
+#
+# Brings up: Judge0 server + workers, Postgres, Redis, and the grader (judge0
+# mode). Optionally the web app (profile "web").
+#
+# Untrusted user code runs ONLY inside the Judge0 workers (cgroups/seccomp via
+# isolate, no network). The grader never executes user code itself in this mode.
+#
+# NOTE: Judge0 workers require a privileged container with cgroup access. On
+# Linux hosts this works out of the box. On Docker Desktop (macOS/Windows) the
+# isolate sandbox may need extra host config — see grader/README.md.
+
+x-judge0-image: &judge0-image
+  image: judge0/judge0:1.13.1
+
+services:
+  # ---- Sandbox: Judge0 API server ----
+  judge0-server:
+    <<: *judge0-image
+    container_name: judge0-server
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    ports:
+      - "2358:2358"
+    privileged: true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- Sandbox: Judge0 workers (execute submissions) ----
+  judge0-workers:
+    <<: *judge0-image
+    container_name: judge0-workers
+    command: ["./scripts/workers"]
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    privileged: true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- Judge0 metadata store ----
+  db:
+    image: postgres:16-alpine
+    container_name: judge0-db
+    environment:
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0pass
+    volumes:
+      - judge0-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U judge0"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ---- Judge0 queue / cache ----
+  redis:
+    image: redis:7-alpine
+    container_name: judge0-redis
+    command:
+      [
+        "redis-server",
+        "--appendonly", "no",
+        "--requirepass", "judge0redis",
+      ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "judge0redis", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ---- The grading service ----
+  grader:
+    build:
+      context: ../grader
+      dockerfile: Dockerfile
+    container_name: grader
+    environment:
+      RUNNER: judge0
+      PORT: "8080"
+      CONTENT_DIR: /content/tasks
+      JUDGE0_URL: http://judge0-server:2358
+      # JUDGE0_LANGUAGE_ID: "89"   # override if your install differs
+      # JUDGE0_AUTH_TOKEN: ""       # set if AUTHN_TOKEN is configured
+      MAX_CODE_BYTES: "65536"
+      RATE_LIMIT_PER_MIN: "30"
+      REQUEST_TIMEOUT_SECONDS: "60"
+      ALLOWED_ORIGINS: "*"
+    volumes:
+      # Tasks (hidden tests + support) mounted read-only.
+      - ../content/tasks:/content/tasks:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - judge0-server
+    restart: unless-stopped
+
+  # ---- Optional Next.js web app (enable with --profile web) ----
+  web:
+    build:
+      context: ../web
+    container_name: trainer-web
+    profiles: ["web"]
+    environment:
+      GRADER_URL: http://grader:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - grader
+    restart: unless-stopped
+
+volumes:
+  judge0-db:

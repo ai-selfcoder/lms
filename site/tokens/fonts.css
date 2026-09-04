@@ -1,0 +1,8 @@
+/* ── Webfonts ───────────────────────────────────────────────────────────
+   UI grotesk: Geist  ·  Code: Geist Mono
+   Geist is the typeface family from Vercel — a precise, neutral grotesk that
+   matches the developer-tool register the product targets (Linear / Vercel /
+   GitHub). Loaded from Google Fonts. If you self-host, drop the binaries in
+   /assets/fonts and swap these @import lines for @font-face rules.
+*/
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');

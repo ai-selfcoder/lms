@@ -1,0 +1,10 @@
+{
+  "id": "17",
+  "num": 17,
+  "topic": "Топик 5 · Highload-задачи",
+  "title": "Leaky Bucket (сглаживание сплесков)",
+  "type": "functional",
+  "slug": "leaky-bucket",
+  "difficulty": "medium",
+  "tags": ["rate-limiting", "leaky-bucket", "channels", "ticker", "graceful-shutdown", "highload"]
+}

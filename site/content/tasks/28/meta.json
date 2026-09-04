@@ -1,0 +1,10 @@
+{
+  "id": "28",
+  "num": 28,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Context-Aware Worker Pool",
+  "type": "functional",
+  "slug": "context-aware-pool",
+  "difficulty": "medium",
+  "tags": ["context", "worker-pool", "cancellation", "channels", "concurrency"]
+}

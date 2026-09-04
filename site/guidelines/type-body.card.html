@@ -1,0 +1,16 @@
+<!-- @dsCard group="Type" viewport="700x240" name="Body, label & mono" subtitle="Reading text, UI labels, and code" -->
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+ body{margin:0;padding:24px;background:var(--bg-canvas);color:var(--text-primary)}
+ .spec{display:flex;align-items:baseline;gap:16px;margin-bottom:12px}
+ .meta{font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);width:120px;flex-shrink:0}
+ .eb{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-text)}
+</style></head><body>
+ <div class="spec"><span class="meta">Body LG · 17</span><span class="t-body-lg" style="color:var(--text-secondary)">Канал — это типизированный конвейер, через который горутины обмениваются значениями.</span></div>
+ <div class="spec"><span class="meta">Body MD · 15</span><span class="t-body-md" style="color:var(--text-secondary)">Отправка в небуферизованный канал блокируется до готовности получателя.</span></div>
+ <div class="spec"><span class="meta">Body SM · 13</span><span class="t-body-sm" style="color:var(--text-tertiary)">Подсказка без спойлера: подумай, кто закрывает канал.</span></div>
+ <div class="spec"><span class="meta">Label MD · 13</span><span class="t-label-md">Запустить тесты</span></div>
+ <div class="spec"><span class="meta">Eyebrow · 11</span><span class="eb">Топик 01 · Каналы</span></div>
+ <div class="spec"><span class="meta">Code MD · 13</span><span class="t-code-md" style="color:var(--code-text)">ch := make(chan int, 8)</span></div>
+</body></html>

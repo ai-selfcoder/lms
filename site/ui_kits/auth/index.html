@@ -1,0 +1,251 @@
+<!-- @dsCard group="Account" viewport="1280x820" name="Аутентификация" subtitle="Login, register, verify, onboarding, reset — full flow" -->
+<!-- @startingPoint section="Goroutine" subtitle="Full auth flow — login, register, verify, onboarding" viewport="1280x820" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goroutine — вход</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{height:100%;}
+  body{margin:0;}
+  .mono{font-family:var(--font-mono);}
+  a{text-decoration:none;color:var(--text-link);}
+  .auth{display:grid;grid-template-columns:46% 54%;min-height:100vh;}
+  /* left brand panel */
+  .brand{position:relative;overflow:hidden;border-right:1px solid var(--border-subtle);background:var(--bg-surface);display:flex;flex-direction:column;justify-content:space-between;padding:40px;}
+  .grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--border-subtle) 1px,transparent 1px),linear-gradient(90deg,var(--border-subtle) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(120% 80% at 30% 20%,#000 25%,transparent 75%);opacity:.5;}
+  .glow{position:absolute;inset:0;background:radial-gradient(420px 280px at 24% 30%,rgba(39,110,241,.14),transparent 70%);}
+  /* right form panel */
+  .formwrap{display:flex;align-items:center;justify-content:center;padding:40px;}
+  .card{width:100%;max-width:400px;}
+  .screen{display:none;}
+  .screen.on{display:block;}
+  @media (prefers-reduced-motion: no-preference){
+    .screen.on{animation:fade .25s var(--ease-out);}
+  }
+  @keyframes fade{from{transform:translateY(7px);}to{transform:none;}}
+  .lbl{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin:0 0 7px;}
+  .field{position:relative;}
+  .inp{width:100%;height:44px;padding:0 14px;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;outline:none;transition:border-color var(--dur-fast),box-shadow var(--dur-fast);box-sizing:border-box;}
+  .inp::placeholder{color:var(--text-disabled);}
+  .inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-subtle);}
+  .inp.err{border-color:var(--error);box-shadow:0 0 0 3px var(--error-bg);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;height:46px;border-radius:var(--radius-md);font-family:var(--font-sans);font-size:15px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all var(--dur-fast) var(--ease-out);}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-accent:hover{background:var(--accent-hover);}
+  .btn-oauth{background:var(--bg-elevated);color:var(--text-primary);border-color:var(--border-strong);}
+  .btn-oauth:hover{background:var(--bg-hover);border-color:var(--grey-600);}
+  .btn-ghost{background:transparent;color:var(--text-secondary);border-color:var(--border-strong);}
+  .btn-ghost:hover{background:var(--bg-hover);color:var(--text-primary);}
+  .h2{font-family:var(--font-sans);font-weight:700;font-size:26px;letter-spacing:-.02em;color:var(--text-primary);margin:0 0 8px;}
+  .sub{font-size:14.5px;line-height:22px;color:var(--text-secondary);margin:0 0 26px;}
+  .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-tertiary);font-size:12px;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border-subtle);}
+  .pin{width:48px;height:56px;text-align:center;font-family:var(--font-mono);font-size:22px;font-weight:600;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);outline:none;transition:all var(--dur-fast);}
+  .pin:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-subtle);}
+  .steps{display:flex;gap:6px;margin-bottom:24px;}
+  .steps i{height:3px;flex:1;border-radius:2px;background:var(--border-default);transition:background var(--dur-base);}
+  .steps i.on{background:var(--accent);}
+  .lvl{display:flex;flex-direction:column;gap:8px;}
+  .lvlopt{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--border-default);border-radius:var(--radius-md);cursor:pointer;transition:all var(--dur-fast);background:var(--bg-inset);}
+  .lvlopt:hover{border-color:var(--border-strong);}
+  .lvlopt.sel{border-color:var(--accent);background:var(--accent-subtle);}
+  .lvlradio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .lvlopt.sel .lvlradio{border-color:var(--accent);}
+  .lvlopt.sel .lvlradio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);}
+  .iconbtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;border-radius:6px;}
+  .iconbtn:hover{color:var(--text-secondary);background:var(--bg-hover);}
+  @media (max-width:820px){ .auth{grid-template-columns:1fr;} .brand{display:none;} }
+</style>
+</head>
+<body>
+<div class="auth">
+
+  <!-- LEFT BRAND PANEL -->
+  <div class="brand">
+    <div class="grid-bg"></div>
+    <div class="glow"></div>
+    <a href="../landing/index.html" style="position:relative;display:inline-flex;align-items:center;gap:10px;font-family:var(--font-sans);font-weight:600;font-size:18px;letter-spacing:-.02em;color:var(--text-primary);">
+      <svg width="26" height="26" viewBox="0 0 28 28"><rect width="28" height="28" rx="7" fill="var(--accent)"/><path d="M8 10.5h7.5a3.5 3.5 0 0 1 0 7H10l2.4-2.4M8 17.5h-.5" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8" cy="10.5" r="1.4" fill="#fff"/></svg>
+      goroutine<span style="color:var(--accent-text)">.</span>
+    </a>
+    <div style="position:relative;">
+      <h1 style="font-family:var(--font-sans);font-weight:700;font-size:34px;line-height:1.1;letter-spacing:-.025em;color:var(--text-primary);max-width:11ch;margin:0 0 22px;">Один аккаунт — весь прогресс под рукой.</h1>
+      <div style="border:1px solid var(--border-default);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg-terminal);max-width:380px;box-shadow:var(--shadow-md);">
+        <div style="display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border-subtle);">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--grey-700);"></span><span style="width:10px;height:10px;border-radius:50%;background:var(--grey-700);"></span><span style="width:10px;height:10px;border-radius:50%;background:var(--grey-700);"></span>
+          <span class="mono" style="font-size:11px;color:var(--text-tertiary);margin-left:4px;">~/goroutine</span>
+        </div>
+        <pre class="mono" style="margin:0;padding:14px;font-size:12.5px;line-height:20px;"><span style="color:var(--text-tertiary)">$</span> goroutine auth login
+<span style="color:var(--text-secondary)">→ verifying device…</span>
+<span style="color:var(--success-fg)">✓ signed in as @akuznetsov</span>
+<span style="color:var(--success-fg)">✓ 12/32 tasks · 9-day streak restored</span>
+<span style="color:var(--text-primary)">ready.</span> <span style="display:inline-block;width:8px;height:15px;background:var(--accent);vertical-align:-2px;animation:blink 1.1s steps(1) infinite;"></span></pre>
+      </div>
+    </div>
+    <p class="mono" style="position:relative;font-size:12px;color:var(--text-tertiary);margin:0;">// регистрация не обязательна — прогресс работает и локально</p>
+  </div>
+
+  <!-- RIGHT FORM PANEL -->
+  <div class="formwrap">
+    <div class="card">
+
+      <!-- LOGIN -->
+      <div class="screen on" id="s-login">
+        <h2 class="h2">Вход</h2>
+        <p class="sub">Войди, чтобы синхронизировать прогресс между устройствами.</p>
+        <div style="display:grid;gap:10px;">
+          <button class="btn btn-oauth" onclick="go('verify')"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C18.6 4.5 19.6 4.8 19.6 4.8c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>Продолжить с GitHub</button>
+          <button class="btn btn-oauth" onclick="go('verify')"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3Z"/><path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24Z"/><path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 0 1 0-4.6V7.1H1.8a12 12 0 0 0 0 10.7l3.8-3Z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.3l3.8 3c.9-2.7 3.4-4.5 6.4-4.5Z"/></svg>Продолжить с Google</button>
+        </div>
+        <div class="divider">или по почте</div>
+        <div style="display:grid;gap:16px;">
+          <div class="field"><label class="lbl">Почта</label><input class="inp" type="email" placeholder="you@example.com" value="alex@example.com"></div>
+          <div class="field">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><label class="lbl">Пароль</label><a href="#" onclick="go('reset');return false" style="font-size:12.5px;">Забыли пароль?</a></div>
+            <input class="inp" id="login-pass" type="password" placeholder="••••••••" value="supersecret">
+            <button class="iconbtn" onclick="togglePass('login-pass',this)" type="button">${'eye'}</button>
+          </div>
+          <button class="btn btn-accent" onclick="go('done')">Войти</button>
+        </div>
+        <p style="text-align:center;font-size:14px;color:var(--text-secondary);margin:22px 0 0;">Нет аккаунта? <a href="#" onclick="go('register');return false">Регистрация</a></p>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="screen" id="s-register">
+        <div class="steps"><i class="on"></i><i></i><i></i></div>
+        <h2 class="h2">Создать аккаунт</h2>
+        <p class="sub">Шаг 1 из 3 · почта и пароль. Это займёт минуту.</p>
+        <div style="display:grid;gap:10px;">
+          <button class="btn btn-oauth" onclick="go('onboarding')"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C18.6 4.5 19.6 4.8 19.6 4.8c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>Регистрация через GitHub</button>
+        </div>
+        <div class="divider">или по почте</div>
+        <div style="display:grid;gap:16px;">
+          <div class="field"><label class="lbl">Почта</label><input class="inp" type="email" placeholder="you@example.com"></div>
+          <div class="field">
+            <label class="lbl">Пароль</label>
+            <input class="inp" id="reg-pass" type="password" placeholder="минимум 8 символов">
+            <button class="iconbtn" onclick="togglePass('reg-pass',this)" type="button">${'eye'}</button>
+          </div>
+          <div style="display:flex;gap:5px;align-items:center;margin-top:-4px;">
+            <span style="flex:1;height:3px;border-radius:2px;background:var(--success);"></span>
+            <span style="flex:1;height:3px;border-radius:2px;background:var(--success);"></span>
+            <span style="flex:1;height:3px;border-radius:2px;background:var(--warning);"></span>
+            <span style="flex:1;height:3px;border-radius:2px;background:var(--border-default);"></span>
+            <span class="mono" style="font-size:11px;color:var(--text-tertiary);margin-left:6px;">средний</span>
+          </div>
+          <button class="btn btn-accent" onclick="go('verify')">Продолжить</button>
+        </div>
+        <p style="text-align:center;font-size:13px;color:var(--text-tertiary);margin:18px 0 0;line-height:19px;">Регистрируясь, ты принимаешь <a href="#">условия</a> и <a href="#">политику конфиденциальности</a>.</p>
+        <p style="text-align:center;font-size:14px;color:var(--text-secondary);margin:14px 0 0;">Уже есть аккаунт? <a href="#" onclick="go('login');return false">Войти</a></p>
+      </div>
+
+      <!-- VERIFY -->
+      <div class="screen" id="s-verify">
+        <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+        <h2 class="h2">Подтверди почту</h2>
+        <p class="sub">Шаг 2 из 3 · мы отправили 6-значный код на <span class="mono" style="color:var(--text-primary)">alex@example.com</span>.</p>
+        <div style="display:flex;gap:9px;justify-content:space-between;margin-bottom:22px;" id="pinwrap">
+          <input class="pin" maxlength="1" inputmode="numeric" value="4">
+          <input class="pin" maxlength="1" inputmode="numeric" value="2">
+          <input class="pin" maxlength="1" inputmode="numeric" value="9">
+          <input class="pin" maxlength="1" inputmode="numeric" value="">
+          <input class="pin" maxlength="1" inputmode="numeric" value="">
+          <input class="pin" maxlength="1" inputmode="numeric" value="">
+        </div>
+        <button class="btn btn-accent" onclick="go('onboarding')" style="margin-bottom:14px;">Подтвердить</button>
+        <p style="text-align:center;font-size:14px;color:var(--text-secondary);margin:0;">Не пришёл код? <a href="#" onclick="return false">Отправить снова</a> <span class="mono" style="color:var(--text-tertiary);font-size:12px;">(0:42)</span></p>
+        <p style="text-align:center;margin:16px 0 0;"><a href="#" onclick="go('register');return false" style="font-size:13px;color:var(--text-tertiary);">← Изменить почту</a></p>
+      </div>
+
+      <!-- ONBOARDING -->
+      <div class="screen" id="s-onboarding">
+        <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <h2 class="h2">Настроим профиль</h2>
+        <p class="sub">Шаг 3 из 3 · подскажем, с чего начать.</p>
+        <div style="display:grid;gap:16px;">
+          <div class="field"><label class="lbl">Имя</label><input class="inp" placeholder="Как тебя называть" value="Алексей"></div>
+          <div class="field"><label class="lbl">Ник</label><input class="inp mono" placeholder="@username" value="@akuznetsov"></div>
+          <div>
+            <label class="lbl">Текущий уровень</label>
+            <div class="lvl" id="lvl">
+              <div class="lvlopt" data-v="junior"><span class="lvlradio"></span><div><div style="font-size:14px;font-weight:500;color:var(--text-primary);">Junior</div><div style="font-size:12.5px;color:var(--text-tertiary);">осваиваю горутины и каналы</div></div></div>
+              <div class="lvlopt sel" data-v="middle"><span class="lvlradio"></span><div><div style="font-size:14px;font-weight:500;color:var(--text-primary);">Middle</div><div style="font-size:12.5px;color:var(--text-tertiary);">готовлюсь к senior-собесам</div></div></div>
+              <div class="lvlopt" data-v="senior"><span class="lvlradio"></span><div><div style="font-size:14px;font-weight:500;color:var(--text-primary);">Senior</div><div style="font-size:12.5px;color:var(--text-tertiary);">повторяю сложные паттерны</div></div></div>
+            </div>
+          </div>
+          <button class="btn btn-accent" onclick="go('done')">Завершить регистрацию</button>
+        </div>
+      </div>
+
+      <!-- DONE -->
+      <div class="screen" id="s-done" style="text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--success-bg);border:1px solid var(--success-border);display:inline-flex;align-items:center;justify-content:center;margin:0 auto 22px;box-shadow:var(--glow-success);">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--success-fg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2 class="h2">Всё готово, Алексей</h2>
+        <p class="sub" style="margin-bottom:8px;">Аккаунт подключён. Прогресс <span class="mono" style="color:var(--text-primary)">12/32</span> и серия 9 дней синхронизированы.</p>
+        <div class="mono" style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--success-fg);background:var(--success-bg);border:1px solid var(--success-border);border-radius:999px;padding:6px 12px;margin-bottom:26px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);"></span>синхронизация включена</div>
+        <div style="display:grid;gap:10px;">
+          <a class="btn btn-accent" href="../account/index.html">Перейти в кабинет</a>
+          <a class="btn btn-ghost" href="../trainer/index.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg> Открыть тренажёр</a>
+        </div>
+      </div>
+
+      <!-- RESET -->
+      <div class="screen" id="s-reset">
+        <h2 class="h2">Сброс пароля</h2>
+        <p class="sub">Укажи почту — пришлём ссылку для восстановления.</p>
+        <div style="display:grid;gap:16px;">
+          <div class="field"><label class="lbl">Почта</label><input class="inp" type="email" placeholder="you@example.com" value="alex@example.com"></div>
+          <button class="btn btn-accent" onclick="go('reset-sent')">Отправить ссылку</button>
+        </div>
+        <p style="text-align:center;margin:18px 0 0;"><a href="#" onclick="go('login');return false" style="font-size:14px;color:var(--text-secondary);">← Вернуться ко входу</a></p>
+      </div>
+
+      <!-- RESET SENT -->
+      <div class="screen" id="s-reset-sent" style="text-align:center;">
+        <div style="width:56px;height:56px;border-radius:14px;background:var(--bg-elevated);border:1px solid var(--border-default);display:inline-flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--accent-text);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        </div>
+        <h2 class="h2">Проверь почту</h2>
+        <p class="sub">Ссылка для сброса отправлена на <span class="mono" style="color:var(--text-primary)">alex@example.com</span>. Перейди по ней, чтобы задать новый пароль.</p>
+        <a class="btn btn-ghost" href="#" onclick="go('login');return false">Вернуться ко входу</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>@keyframes blink{50%{opacity:0;}}</style>
+<script>
+const EYE='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYEOFF='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c6.5 0 10 7 10 7a16.8 16.8 0 0 1-3.3 4M6.6 6.6A16.8 16.8 0 0 0 2 11s3.5 7 10 7a10.9 10.9 0 0 0 4.4-.9"/><path d="m2 2 20 20M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+// inject eye icons
+document.querySelectorAll('.iconbtn').forEach(b=>b.innerHTML=EYE);
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.querySelector('.formwrap').scrollTop=0;
+  if(id==='verify') setTimeout(()=>{const e=document.querySelector('#pinwrap .pin[value=""]')||document.querySelector('#pinwrap .pin');e&&e.focus();},60);
+}
+function togglePass(id,btn){
+  const i=document.getElementById(id);
+  if(i.type==='password'){i.type='text';btn.innerHTML=EYEOFF;}else{i.type='password';btn.innerHTML=EYE;}
+}
+// pin auto-advance
+const pins=[...document.querySelectorAll('#pinwrap .pin')];
+pins.forEach((p,i)=>{
+  p.addEventListener('input',e=>{p.value=p.value.replace(/\D/g,'');if(p.value&&pins[i+1])pins[i+1].focus();});
+  p.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!p.value&&pins[i-1])pins[i-1].focus();});
+});
+// level select
+document.querySelectorAll('#lvl .lvlopt').forEach(o=>o.onclick=()=>{
+  document.querySelectorAll('#lvl .lvlopt').forEach(x=>x.classList.remove('sel'));o.classList.add('sel');
+});
+</script>
+</body>
+</html>

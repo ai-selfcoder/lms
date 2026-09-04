@@ -1,0 +1,10 @@
+node_modules
+dist
+*.log
+
+# SQLite dev database (a fresh `prisma migrate` recreates it)
+prisma/dev.db
+prisma/dev.db-journal
+
+# Keep .env out of git; .env.example is committed
+.env

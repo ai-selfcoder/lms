@@ -1,0 +1,10 @@
+{
+  "id": "01",
+  "num": 1,
+  "topic": "ОС · Планировщик CPU",
+  "slug": "round-robin",
+  "title": "Round Robin: потактовый таймлайн",
+  "type": "functional",
+  "difficulty": "easy",
+  "tags": ["scheduling", "round-robin"]
+}

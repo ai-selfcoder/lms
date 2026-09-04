@@ -1,0 +1,22 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Status & difficulty" subtitle="PASS / FAIL / TIMEOUT + easy / medium / hard" -->
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+ body{margin:0;padding:20px;background:var(--bg-canvas);display:grid;gap:10px}
+ .row{display:flex;gap:10px}
+ .chip{flex:1;height:46px;border-radius:var(--radius-md);display:flex;align-items:center;gap:8px;padding:0 14px;border:1px solid}
+ .dot{width:9px;height:9px;border-radius:50%}
+ .lbl{font-family:var(--font-mono);font-size:13px;font-weight:500}
+ .v{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)}
+</style></head><body>
+ <div class="row">
+  <div class="chip" style="background:var(--success-bg);border-color:var(--success-border)"><span class="dot" style="background:var(--success)"></span><span class="lbl" style="color:var(--success-fg)">PASS</span><span class="v">success</span></div>
+  <div class="chip" style="background:var(--error-bg);border-color:var(--error-border)"><span class="dot" style="background:var(--error)"></span><span class="lbl" style="color:var(--error-fg)">FAIL</span><span class="v">error</span></div>
+  <div class="chip" style="background:var(--warning-bg);border-color:var(--warning-border)"><span class="dot" style="background:var(--warning)"></span><span class="lbl" style="color:var(--warning-fg)">TIMEOUT</span><span class="v">warning</span></div>
+ </div>
+ <div class="row">
+  <div class="chip" style="background:transparent;border-color:var(--border-default)"><span class="dot" style="background:var(--diff-easy)"></span><span class="lbl" style="color:var(--diff-easy)">easy</span><span class="v">~6 задач</span></div>
+  <div class="chip" style="background:transparent;border-color:var(--border-default)"><span class="dot" style="background:var(--diff-medium)"></span><span class="lbl" style="color:var(--diff-medium)">medium</span><span class="v">~20 задач</span></div>
+  <div class="chip" style="background:transparent;border-color:var(--border-default)"><span class="dot" style="background:var(--diff-hard)"></span><span class="lbl" style="color:var(--diff-hard)">hard</span><span class="v">~6 задач</span></div>
+ </div>
+</body></html>

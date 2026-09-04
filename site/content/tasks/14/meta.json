@@ -1,0 +1,10 @@
+{
+  "id": "14",
+  "num": 14,
+  "topic": "Топик 4 · Управление контекстом",
+  "title": "Древовидная отмена (Graceful Shutdown)",
+  "type": "functional",
+  "slug": "graceful-shutdown",
+  "difficulty": "medium",
+  "tags": ["context", "graceful-shutdown", "waitgroup"]
+}

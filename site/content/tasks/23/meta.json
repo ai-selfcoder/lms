@@ -1,0 +1,10 @@
+{
+  "id": "23",
+  "num": 23,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Worker Pool с динамическим масштабированием",
+  "type": "functional",
+  "slug": "scaling-worker-pool",
+  "difficulty": "hard",
+  "tags": ["worker-pool", "sync", "scaling", "goroutine-leak", "atomic"]
+}

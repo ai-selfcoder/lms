@@ -1,0 +1,15 @@
+{
+  "id": "rr",
+  "kind": "cpu-scheduler",
+  "title": "Round Robin",
+  "explain": "RR режет время на кванты и крутит задачи по кругу — отклик отличный, но оборот растёт. Поиграй квантом: маленький = честнее отклик, больше переключений.",
+  "defaults": {
+    "policy": "RR",
+    "quantum": 2,
+    "jobs": [
+      { "name": "A", "arrival": 0, "burst": 5 },
+      { "name": "B", "arrival": 0, "burst": 5 },
+      { "name": "C", "arrival": 0, "burst": 5 }
+    ]
+  }
+}

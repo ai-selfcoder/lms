@@ -1,0 +1,10 @@
+{
+  "id": "12",
+  "num": 12,
+  "topic": "Топик 3 · Паттерны конкурентности",
+  "title": "Batcher (группировщик запросов)",
+  "type": "functional",
+  "slug": "batcher",
+  "difficulty": "medium",
+  "tags": ["batching", "select", "graceful-shutdown"]
+}

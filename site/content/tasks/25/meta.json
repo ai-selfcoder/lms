@@ -1,0 +1,10 @@
+{
+  "id": "25",
+  "num": 25,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Priority Worker Pool",
+  "type": "functional",
+  "slug": "priority-worker-pool",
+  "difficulty": "hard",
+  "tags": ["worker-pool", "sync-cond", "heap", "priority-queue", "sync"]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "31",
+  "num": 31,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Cron Worker Pool (периодические задачи)",
+  "type": "functional",
+  "slug": "cron-scheduler",
+  "difficulty": "medium",
+  "tags": ["scheduler", "ticker", "worker-pool", "graceful-shutdown", "patterns", "concurrency"]
+}

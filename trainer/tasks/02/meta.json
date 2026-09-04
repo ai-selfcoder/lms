@@ -1,0 +1,7 @@
+{
+  "id": "02",
+  "num": 2,
+  "topic": "Топик 1 · Каналы и select",
+  "title": "Unbuffered канал и утечка горутины",
+  "type": "functional"
+}

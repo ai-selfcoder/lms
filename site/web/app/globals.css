@@ -1,0 +1,186 @@
+/* ════════════════════════════════════════════════════════════════════════
+   App-level prose. Базу (reset, body, шрифты, скроллбары, фокус) даёт
+   дизайн-система (ds/styles.css → tokens/base.css). Здесь — только стили MDX-прозы
+   учебника и теории, целиком на токенах DS.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Фон сайта — плоский канвас DS (border-led система, без glow). Лёгкую
+   структуру даёт вертикальная hairline-сетка очень низкой контрастности. */
+body {
+  background-color: var(--bg-canvas);
+  background-image: linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 120px 100%;
+  background-position: calc(50% + 0.5px) 0;
+}
+
+.mdx {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--body-md);
+  line-height: var(--body-md-lh);
+  letter-spacing: var(--body-md-ls);
+}
+.mdx h1,
+.mdx h2,
+.mdx h3,
+.mdx h4 {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  letter-spacing: -0.015em;
+  scroll-margin-top: 80px;
+}
+.mdx h1 {
+  font-size: var(--heading-xl);
+  line-height: var(--heading-xl-lh);
+  font-weight: var(--fw-semibold);
+  margin: 0 0 16px;
+}
+.mdx h2 {
+  font-size: var(--heading-lg);
+  line-height: var(--heading-lg-lh);
+  font-weight: var(--fw-semibold);
+  margin: 36px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.mdx h3 {
+  font-size: var(--heading-md);
+  line-height: var(--heading-md-lh);
+  font-weight: var(--fw-semibold);
+  margin: 26px 0 8px;
+}
+.mdx h4 {
+  font-size: var(--heading-sm);
+  line-height: var(--heading-sm-lh);
+  font-weight: var(--fw-semibold);
+  margin: 20px 0 6px;
+}
+.mdx p {
+  margin: 12px 0;
+}
+.mdx ul,
+.mdx ol {
+  margin: 12px 0;
+  padding-left: 22px;
+}
+.mdx li {
+  margin: 5px 0;
+}
+.mdx ul {
+  list-style: disc;
+}
+.mdx ol {
+  list-style: decimal;
+}
+.mdx li::marker {
+  color: var(--text-tertiary);
+}
+.mdx strong {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+}
+.mdx a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+.mdx a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* inline code */
+.mdx :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+/* code blocks — dark inset island, framed like the DS CodeBlock */
+.mdx pre {
+  margin: 16px 0;
+  padding: 16px 18px;
+  background: var(--code-bg);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--code-md);
+  line-height: var(--code-md-lh);
+  color: var(--code-text);
+}
+.mdx pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  color: inherit;
+}
+.mdx figcaption[data-rehype-pretty-code-title] {
+  font-family: var(--font-mono);
+  font-size: var(--code-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 8px 16px;
+  margin-bottom: -16px;
+}
+.mdx figcaption[data-rehype-pretty-code-title] + pre {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.mdx blockquote {
+  margin: 16px 0;
+  padding: 8px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-subtle);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+}
+.mdx blockquote p {
+  margin: 4px 0;
+}
+.mdx table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+  font-size: var(--body-sm);
+}
+.mdx th,
+.mdx td {
+  border: 1px solid var(--border-default);
+  padding: 8px 12px;
+  text-align: left;
+}
+.mdx td {
+  color: var(--text-secondary);
+}
+.mdx th {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+}
+.mdx hr {
+  border: none;
+  border-top: 1px solid var(--border-default);
+  margin: 28px 0;
+}
+
+/* Plain (non-mdx) Go code blocks reuse the inset island look */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--code-md);
+  line-height: var(--code-md-lh);
+  color: var(--code-text);
+  white-space: pre;
+}

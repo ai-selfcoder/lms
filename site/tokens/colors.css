@@ -1,0 +1,169 @@
+/* ════════════════════════════════════════════════════════════════════════
+   COLORS — Goroutine design system
+   Dark theme is the source of truth. A light theme is provided as an opt-in
+   scope ([data-theme="light"]) but the product ships dark-first.
+
+   Palette philosophy: near-black flat surfaces, a single expressive accent
+   (Base blue), and three loud semantic status colors tuned for the test
+   runner (PASS / FAIL / TIMEOUT). Accent and greys are drawn from the Uber
+   Base reference; semantics are brightened to hold contrast on dark.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Primitive ramps ───────────────────────────────────────────────── */
+  /* Neutral (cool grey, slight blue cast) */
+  --grey-0:   #ffffff;
+  --grey-50:  #f4f6f9;
+  --grey-100: #e7eaef;
+  --grey-200: #c9cfd8;
+  --grey-300: #a6adb8;
+  --grey-400: #80878f;   /* mid */
+  --grey-500: #6c7079;
+  --grey-600: #4b5059;
+  --grey-700: #353a42;
+  --grey-800: #23262c;
+  --grey-850: #181b20;
+  --grey-900: #131519;
+  --grey-950: #0e1014;
+  --grey-1000:#0b0d10;
+
+  /* Accent — Base blue (#276EF1) extended for dark UI */
+  --blue-50:  #e9f0ff;
+  --blue-100: #cfdfff;
+  --blue-200: #9cbcff;
+  --blue-300: #6f9dff;
+  --blue-400: #4a86ff;
+  --blue-500: #276ef1;   /* core accent */
+  --blue-600: #1e5ad1;
+  --blue-700: #1849a8;
+  --blue-900: #13203a;   /* deep tint for fills on dark */
+
+  /* Success / PASS — green */
+  --green-300: #5ee79a;
+  --green-400: #2fcf7e;
+  --green-500: #16b364;
+  --green-600: #0e8d4e;
+  --green-900: #0c2419;
+
+  /* Error / FAIL — red */
+  --red-300: #ff8a96;
+  --red-400: #ff5c6c;
+  --red-500: #ef3e51;
+  --red-600: #cf2438;
+  --red-900: #2a1216;
+
+  /* Warning / TIMEOUT — amber */
+  --amber-300: #ffd564;
+  --amber-400: #f6bc2f;
+  --amber-500: #e0a013;
+  --amber-600: #b27d08;
+  --amber-900: #2a2008;
+
+  /* Accent secondary — violet (race/atomic accents, links in prose) */
+  --violet-400: #a78bfa;
+  --violet-500: #8b5cf6;
+  --violet-900: #1e1733;
+
+  /* ── Semantic aliases (DARK — default) ─────────────────────────────── */
+  /* Surfaces */
+  --bg-canvas:    var(--grey-1000);   /* app background */
+  --bg-surface:   var(--grey-900);    /* panels, header, sidebar */
+  --bg-elevated:  var(--grey-850);    /* cards, menus, popovers */
+  --bg-inset:     var(--grey-950);    /* code blocks, wells */
+  --bg-terminal:  #08090b;            /* test-runner console */
+  --bg-hover:     rgba(255,255,255,0.04);
+  --bg-active:    rgba(255,255,255,0.07);
+  --bg-overlay:   rgba(8,9,11,0.66);
+
+  /* Text */
+  --text-primary:   #eef1f5;
+  --text-secondary: #9ba3ae;
+  --text-tertiary:  #6c7079;
+  --text-disabled:  #4b5059;
+  --text-inverse:   #0b0d10;
+  --text-link:      var(--blue-400);
+
+  /* Borders */
+  --border-subtle:  #1d2025;
+  --border-default: #2a2e35;
+  --border-strong:  #3a3f47;
+  --border-focus:   var(--blue-400);
+
+  /* Accent semantic */
+  --accent:          var(--blue-500);
+  --accent-hover:    var(--blue-400);
+  --accent-pressed:  var(--blue-600);
+  --accent-fg:       #ffffff;          /* text on accent fill */
+  --accent-subtle:   rgba(39,110,241,0.14);
+  --accent-text:     var(--blue-400);  /* accent as foreground on dark */
+
+  /* Status — surfaces, borders, foregrounds */
+  --success:         var(--green-400);
+  --success-fg:      var(--green-300);
+  --success-bg:      rgba(47,207,126,0.12);
+  --success-border:  rgba(47,207,126,0.34);
+
+  --error:           var(--red-400);
+  --error-fg:        var(--red-300);
+  --error-bg:        rgba(255,92,108,0.12);
+  --error-border:    rgba(255,92,108,0.34);
+
+  --warning:         var(--amber-400);
+  --warning-fg:      var(--amber-300);
+  --warning-bg:      rgba(246,188,47,0.12);
+  --warning-border:  rgba(246,188,47,0.32);
+
+  --info:            var(--blue-400);
+  --info-bg:         var(--accent-subtle);
+  --info-border:     rgba(74,134,255,0.32);
+
+  /* Difficulty (easy / medium / hard) */
+  --diff-easy:    var(--green-400);
+  --diff-medium:  var(--amber-400);
+  --diff-hard:    var(--red-400);
+
+  /* Syntax highlighting (Go) — tuned for --bg-inset */
+  --code-bg:        var(--bg-inset);
+  --code-text:      #c9d1d9;
+  --code-comment:   #5c6370;
+  --code-keyword:   #ff7b9c;   /* func, go, chan, select, for */
+  --code-type:      #5ec8ff;   /* int, string, struct names */
+  --code-func:      #c39bff;   /* function calls */
+  --code-string:    #8ee08a;   /* "literals" */
+  --code-number:    #f6bc2f;
+  --code-builtin:   #4a86ff;   /* make, len, append */
+  --code-punct:     #8b939e;
+}
+
+/* ── LIGHT theme (opt-in) ───────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-canvas:    #ffffff;
+  --bg-surface:   #f4f6f9;
+  --bg-elevated:  #ffffff;
+  --bg-inset:     #f4f6f9;
+  --bg-terminal:  #0e1014;     /* terminal stays dark even in light theme */
+  --bg-hover:     rgba(11,13,16,0.04);
+  --bg-active:    rgba(11,13,16,0.07);
+  --bg-overlay:   rgba(11,13,16,0.4);
+
+  --text-primary:   #0b0d10;
+  --text-secondary: #4b5059;
+  --text-tertiary:  #80878f;
+  --text-disabled:  #a6adb8;
+  --text-inverse:   #ffffff;
+  --text-link:      var(--blue-600);
+
+  --border-subtle:  #e7eaef;
+  --border-default: #d4d9e0;
+  --border-strong:  #b6bdc7;
+
+  --accent-fg:      #ffffff;
+  --accent-text:    var(--blue-600);
+  --accent-subtle:  rgba(39,110,241,0.10);
+
+  --success: var(--green-600); --success-fg: var(--green-600); --success-bg: rgba(22,179,100,0.10); --success-border: rgba(22,179,100,0.30);
+  --error:   var(--red-600);   --error-fg:   var(--red-600);   --error-bg:   rgba(207,36,56,0.09);  --error-border:   rgba(207,36,56,0.28);
+  --warning: var(--amber-600); --warning-fg: var(--amber-600); --warning-bg: rgba(224,160,19,0.12); --warning-border: rgba(224,160,19,0.30);
+
+  --diff-easy: var(--green-600); --diff-medium: var(--amber-600); --diff-hard: var(--red-600);
+}

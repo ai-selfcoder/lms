@@ -1,0 +1,14 @@
+{
+  "id": "07",
+  "num": 7,
+  "topic": "ОС · Конкурентность",
+  "slug": "spinlock-sum",
+  "title": "Спинлок на atomic",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "concurrency",
+    "locks",
+    "atomic"
+  ]
+}

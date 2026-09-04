@@ -1,0 +1,298 @@
+<!-- @dsCard group="Account" viewport="1280x900" name="Личный кабинет" subtitle="Dashboard — progress, activity heatmap, recent runs, sync" -->
+<!-- @startingPoint section="Goroutine" subtitle="User dashboard / personal account (dark)" viewport="1280x900" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goroutine — личный кабинет</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;}
+  .mono{font-family:var(--font-mono);}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;}
+  a{text-decoration:none;}
+  .navlink{color:var(--text-secondary);font-size:14px;font-weight:500;transition:color var(--dur-fast);}
+  .navlink:hover{color:var(--text-primary);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--radius-md);font-family:var(--font-sans);font-size:14px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all var(--dur-fast) var(--ease-out);white-space:nowrap;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-accent:hover{background:var(--accent-hover);}
+  .btn-ghost{background:transparent;color:var(--text-primary);border-color:var(--border-strong);}
+  .btn-ghost:hover{background:var(--bg-hover);border-color:var(--grey-600);}
+  .btn-sm{height:32px;padding:0 12px;font-size:13px;}
+  .panel{background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-lg);}
+  .ptitle{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border-subtle);}
+  .ptitle h3{font-family:var(--font-sans);font-size:14px;font-weight:600;color:var(--text-primary);margin:0;}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);}
+  .hm{width:11px;height:11px;border-radius:2px;}
+  .row{display:flex;align-items:center;gap:12px;}
+  .seg{display:inline-flex;gap:2px;padding:3px;background:var(--bg-inset);border:1px solid var(--border-default);border-radius:var(--radius-md);}
+  .seg button{height:28px;padding:0 12px;font-size:12.5px;font-weight:500;font-family:var(--font-sans);color:var(--text-secondary);background:transparent;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;}
+  .seg button.on{color:var(--text-primary);background:var(--bg-elevated);border-color:var(--border-strong);}
+  @media (max-width:900px){ .dash{grid-template-columns:1fr!important;} .stats{grid-template-columns:1fr 1fr!important;} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="position:sticky;top:0;z-index:200;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg-canvas) 82%,transparent);border-bottom:1px solid var(--border-subtle);">
+  <div class="wrap" style="height:var(--header-h);display:flex;align-items:center;gap:28px;">
+    <a href="../landing/index.html" style="display:inline-flex;align-items:center;gap:10px;font-family:var(--font-sans);font-weight:600;font-size:17px;letter-spacing:-.02em;color:var(--text-primary);">
+      <svg width="24" height="24" viewBox="0 0 28 28"><rect width="28" height="28" rx="7" fill="var(--accent)"/><path d="M8 10.5h7.5a3.5 3.5 0 0 1 0 7H10l2.4-2.4M8 17.5h-.5" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8" cy="10.5" r="1.4" fill="#fff"/></svg>
+      goroutine<span style="color:var(--accent-text)">.</span>
+    </a>
+    <nav style="display:flex;gap:24px;margin-left:6px;">
+      <a class="navlink" href="../trainer/index.html">Тренажёр</a>
+      <a class="navlink" href="../textbook/index.html">Учебник</a>
+      <a class="navlink" href="../landing/index.html#topics">Топики</a>
+    </nav>
+    <div style="margin-left:auto;display:flex;gap:12px;align-items:center;">
+      <a class="btn btn-accent btn-sm" href="../trainer/index.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg> Продолжить</a>
+      <span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--violet-500));display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:600;color:#fff;">АК</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="padding:40px 28px 80px;">
+
+  <!-- PAGE HEADER -->
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:32px;flex-wrap:wrap;">
+    <div>
+      <span class="eyebrow">Личный кабинет</span>
+      <h1 style="font-family:var(--font-sans);font-weight:700;font-size:34px;letter-spacing:-.02em;margin:8px 0 6px;color:var(--text-primary);">С возвращением, Алексей</h1>
+      <p class="mono" style="font-size:13px;color:var(--text-tertiary);margin:0;">// серия 9 дней · последний прогон 2 часа назад · до senior-уровня осталось 8 задач</p>
+    </div>
+    <div class="seg" id="themeseg">
+      <button class="on" data-th="dark">Тёмная</button>
+      <button data-th="light">Светлая</button>
+    </div>
+  </div>
+
+  <!-- STAT TILES -->
+  <div class="stats" style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border-default);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:24px;">
+    <div style="padding:20px 22px;border-right:1px solid var(--border-subtle);">
+      <div class="eyebrow" style="margin-bottom:12px;">Решено задач</div>
+      <div class="mono" style="font-size:32px;font-weight:600;color:var(--text-primary);letter-spacing:-.02em;">12<span style="font-size:16px;color:var(--text-tertiary);">/32</span></div>
+      <div style="height:4px;background:var(--bg-inset);border-radius:999px;overflow:hidden;margin-top:12px;"><div style="width:37.5%;height:100%;background:var(--accent);"></div></div>
+    </div>
+    <div style="padding:20px 22px;border-right:1px solid var(--border-subtle);">
+      <div class="eyebrow" style="margin-bottom:12px;">Текущая серия</div>
+      <div class="mono" style="font-size:32px;font-weight:600;color:var(--text-primary);letter-spacing:-.02em;display:inline-flex;align-items:baseline;gap:8px;">9 <span style="font-size:14px;color:var(--text-tertiary);font-weight:400;">дней</span></div>
+      <div class="mono" style="font-size:12px;color:var(--success-fg);margin-top:12px;display:inline-flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);"></span>рекорд: 14 дней</div>
+    </div>
+    <div style="padding:20px 22px;border-right:1px solid var(--border-subtle);">
+      <div class="eyebrow" style="margin-bottom:12px;">Прогонов тестов</div>
+      <div class="mono" style="font-size:32px;font-weight:600;color:var(--text-primary);letter-spacing:-.02em;">247</div>
+      <div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:12px;">за всё время</div>
+    </div>
+    <div style="padding:20px 22px;">
+      <div class="eyebrow" style="margin-bottom:12px;">Доля PASS</div>
+      <div class="mono" style="font-size:32px;font-weight:600;color:var(--text-primary);letter-spacing:-.02em;">68<span style="font-size:16px;color:var(--text-tertiary);">%</span></div>
+      <div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:12px;">168 PASS · 79 FAIL</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD GRID -->
+  <div class="dash" style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;">
+
+    <!-- LEFT COLUMN -->
+    <div style="display:grid;gap:24px;">
+
+      <!-- ACTIVITY HEATMAP -->
+      <div class="panel">
+        <div class="ptitle">
+          <h3>Активность</h3>
+          <span class="mono" style="font-size:12px;color:var(--text-tertiary);">последние 17 недель</span>
+        </div>
+        <div style="padding:18px 18px 14px;overflow-x:auto;">
+          <div id="heatmap" style="display:flex;gap:3px;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+            <span class="mono" style="font-size:12px;color:var(--text-tertiary);"><b style="color:var(--text-secondary);font-weight:600;">53</b> активных дня</span>
+            <div class="mono row" style="font-size:11px;color:var(--text-tertiary);gap:6px;">
+              меньше
+              <span class="hm" style="background:var(--bg-inset);border:1px solid var(--border-subtle);"></span>
+              <span class="hm" style="background:rgba(47,207,126,0.28);"></span>
+              <span class="hm" style="background:rgba(47,207,126,0.5);"></span>
+              <span class="hm" style="background:rgba(47,207,126,0.75);"></span>
+              <span class="hm" style="background:var(--success);"></span>
+              больше
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOPIC PROGRESS -->
+      <div class="panel">
+        <div class="ptitle">
+          <h3>Прогресс по топикам</h3>
+          <a class="navlink mono" href="../landing/index.html#topics" style="font-size:12px;">все →</a>
+        </div>
+        <div id="topicprog" style="padding:6px 0;"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:grid;gap:24px;">
+
+      <!-- PROFILE -->
+      <div class="panel" style="padding:22px;">
+        <div class="row" style="gap:14px;">
+          <span style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--violet-500));display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:18px;font-weight:600;color:#fff;flex-shrink:0;">АК</span>
+          <div style="min-width:0;">
+            <div style="font-size:16px;font-weight:600;color:var(--text-primary);">Алексей Кузнецов</div>
+            <div class="mono" style="font-size:12.5px;color:var(--text-tertiary);">@akuznetsov</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <span class="mono" style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;color:var(--accent-text);background:var(--accent-subtle);border:1px solid var(--info-border);">middle → senior</span>
+          <span class="mono" style="display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;color:var(--text-secondary);background:var(--bg-inset);border:1px solid var(--border-default);">с марта 2026</span>
+        </div>
+      </div>
+
+      <!-- CONTINUE -->
+      <div class="panel" style="overflow:hidden;">
+        <div style="padding:16px 18px;">
+          <div class="eyebrow" style="margin-bottom:10px;">Продолжить</div>
+          <div class="row" style="gap:10px;margin-bottom:6px;">
+            <span class="mono" style="font-size:12px;color:var(--text-tertiary);">07 · 25</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:500;color:var(--diff-medium);background:var(--warning-bg);border:1px solid var(--warning-border);"><span style="width:5px;height:5px;border-radius:50%;background:var(--diff-medium);"></span>medium</span>
+          </div>
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:14px;">Пул с ограничением параллелизма</div>
+          <a class="btn btn-accent btn-sm" href="../trainer/index.html" style="width:100%;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg> Открыть в тренажёре</a>
+        </div>
+      </div>
+
+      <!-- DIFFICULTY -->
+      <div class="panel">
+        <div class="ptitle"><h3>По сложности</h3></div>
+        <div style="padding:16px 18px;display:grid;gap:14px;" id="diffbars"></div>
+      </div>
+
+      <!-- SYNC / ACCOUNT -->
+      <div class="panel" style="padding:18px;">
+        <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+          <div class="eyebrow">Синхронизация</div>
+          <span class="mono" style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-text);background:var(--accent-subtle);border:1px solid var(--info-border);border-radius:4px;padding:2px 6px;">скоро</span>
+        </div>
+        <p style="font-size:13px;line-height:20px;color:var(--text-secondary);margin:0 0 14px;">Прогресс и код хранятся локально в этом браузере. Подключи аккаунт, чтобы синхронизировать между устройствами.</p>
+        <button class="btn btn-ghost btn-sm" style="width:100%;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          Подключить аккаунт
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RECENT ACTIVITY -->
+  <div class="panel" style="margin-top:24px;">
+    <div class="ptitle">
+      <h3>Недавние прогоны</h3>
+      <span class="mono" style="font-size:12px;color:var(--text-tertiary);">go test -race</span>
+    </div>
+    <div id="recent"></div>
+  </div>
+
+</main>
+
+<footer style="border-top:1px solid var(--border-subtle);">
+  <div class="wrap" style="padding:28px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+    <span class="row" style="gap:9px;font-family:var(--font-sans);font-weight:600;font-size:15px;color:var(--text-secondary);">
+      <svg width="20" height="20" viewBox="0 0 28 28"><rect width="28" height="28" rx="7" fill="var(--text-tertiary)"/><path d="M8 10.5h7.5a3.5 3.5 0 0 1 0 7H10l2.4-2.4M8 17.5h-.5" stroke="var(--bg-canvas)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      goroutine<span style="color:var(--text-tertiary)">.</span>
+    </span>
+    <span class="mono" style="font-size:12px;color:var(--text-tertiary);">// прогресс сохранён локально · 12/32 решено</span>
+  </div>
+</footer>
+
+<script>
+// ── activity heatmap ───────────────────────────────────────────────
+(function(){
+  const weeks=17, days=7;
+  let rng=42; const rnd=()=>{rng=(rng*1103515245+12345)&0x7fffffff;return rng/0x7fffffff;};
+  const levels=['var(--bg-inset)','rgba(47,207,126,0.28)','rgba(47,207,126,0.5)','rgba(47,207,126,0.75)','var(--success)'];
+  let html='';
+  for(let w=0;w<weeks;w++){
+    html+='<div style="display:flex;flex-direction:column;gap:3px;">';
+    for(let d=0;d<days;d++){
+      const recent=w>weeks-4; // denser lately
+      let lvl=0; const r=rnd();
+      if(r>0.55) lvl=1; if(r>0.72) lvl=2; if(r>0.85) lvl=3; if(r>0.94) lvl=4;
+      if(recent && r>0.4) lvl=Math.min(4,lvl+1);
+      if(w<2 && r>0.7) lvl=0;
+      const border=lvl===0?'border:1px solid var(--border-subtle);':'';
+      html+=`<span class="hm" title="${lvl} прогонов" style="background:${levels[lvl]};${border}"></span>`;
+    }
+    html+='</div>';
+  }
+  document.getElementById('heatmap').innerHTML=html;
+})();
+
+// ── topic progress ─────────────────────────────────────────────────
+const TOPICS=[
+  ['01','Каналы и select',4,4],['02','Синхронизация и sync',3,4],
+  ['03','Паттерны конкурентности',2,4],['04','Управление контекстом',1,3],
+  ['05','Highload-задачи',1,5],['06','Code Review',0,2],['07','Воркер-пулы и конвейеры',6,10],
+];
+document.getElementById('topicprog').innerHTML=TOPICS.map(([n,name,done,total])=>{
+  const pct=Math.round(done/total*100);
+  const done100=done===total;
+  const pc=done100?'var(--success-fg)':done===0?'var(--text-tertiary)':'var(--text-secondary)';
+  const bc=done100?'var(--success)':'var(--accent)';
+  return `<div style="display:grid;grid-template-columns:24px 1fr 160px 56px;align-items:center;gap:14px;padding:9px 18px;">
+    <span class="mono" style="font-size:12px;color:var(--text-tertiary);">${n}</span>
+    <span style="font-size:14px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
+    <span style="height:5px;background:var(--bg-inset);border-radius:999px;overflow:hidden;"><span style="display:block;width:${pct}%;height:100%;background:${bc};"></span></span>
+    <span class="mono" style="font-size:12.5px;color:${pc};text-align:right;">${done}/${total}</span>
+  </div>`;
+}).join('');
+
+// ── difficulty bars ────────────────────────────────────────────────
+const DIFF=[['easy',5,6,'var(--diff-easy)'],['medium',6,20,'var(--diff-medium)'],['hard',1,6,'var(--diff-hard)']];
+document.getElementById('diffbars').innerHTML=DIFF.map(([name,done,total,c])=>{
+  const pct=Math.round(done/total*100);
+  return `<div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+      <span class="mono" style="font-size:12.5px;color:${c};display:inline-flex;align-items:center;gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:${c};"></span>${name}</span>
+      <span class="mono" style="font-size:12.5px;color:var(--text-secondary);">${done}/${total}</span>
+    </div>
+    <div style="height:5px;background:var(--bg-inset);border-radius:999px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${c};"></div></div>
+  </div>`;
+}).join('');
+
+// ── recent runs ────────────────────────────────────────────────────
+const RECENT=[
+  ['pass','24 · Пул с результатами','Воркер-пулы','2 часа назад','1.6s'],
+  ['fail','25 · Пул с ограничением','Воркер-пулы','2 часа назад','0.9s'],
+  ['pass','10 · Fan-out / fan-in','Паттерны','вчера','1.2s'],
+  ['pass','06 · sync.Once','Синхронизация','вчера','0.8s'],
+  ['fail','07 · RWMutex-кэш','Синхронизация','2 дня назад','0.7s'],
+];
+const vmap={
+  pass:{label:'PASS',fg:'var(--success-fg)',dot:'var(--success)'},
+  fail:{label:'FAIL',fg:'var(--error-fg)',dot:'var(--error)'},
+};
+document.getElementById('recent').innerHTML=RECENT.map(([v,task,topic,when,dur],i)=>{
+  const m=vmap[v];
+  return `<a href="../trainer/index.html" style="display:grid;grid-template-columns:80px 1fr 160px 110px 50px;align-items:center;gap:14px;padding:13px 18px;${i>0?'border-top:1px solid var(--border-subtle);':''}transition:background var(--dur-fast);" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+    <span class="mono row" style="font-size:12px;font-weight:500;color:${m.fg};gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:${m.dot};"></span>${m.label}</span>
+    <span style="font-size:14px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task}</span>
+    <span style="font-size:13px;color:var(--text-tertiary);">${topic}</span>
+    <span class="mono" style="font-size:12px;color:var(--text-tertiary);">${when}</span>
+    <span class="mono" style="font-size:12px;color:var(--text-tertiary);text-align:right;">${dur}</span>
+  </a>`;
+}).join('');
+
+// ── theme toggle (demo) ────────────────────────────────────────────
+document.querySelectorAll('#themeseg button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#themeseg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    if(b.dataset.th==='light') document.documentElement.setAttribute('data-theme','light');
+    else document.documentElement.removeAttribute('data-theme');
+  };
+});
+</script>
+</body>
+</html>

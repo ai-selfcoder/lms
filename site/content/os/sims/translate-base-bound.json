@@ -1,0 +1,13 @@
+{
+  "id": "translate-base-bound",
+  "kind": "address-translation",
+  "title": "base-and-bounds",
+  "explain": "Подвигай виртуальный адрес ползунком. Железо прибавляет base и проверяет bound: вышел за границу — segfault.",
+  "defaults": {
+    "mode": "base-bound",
+    "vaBits": 14,
+    "base": 32768,
+    "bound": 16384,
+    "va": 1000
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "22",
+  "num": 22,
+  "topic": "Топик 6 · Code Review",
+  "title": "Параллельный HTTP-воркер с кэшированием",
+  "type": "review",
+  "slug": "http-worker-cache-review",
+  "difficulty": "medium",
+  "tags": ["code-review", "data-race", "slice-append", "worker-pool", "cache", "mutex"]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "08",
+  "num": 8,
+  "topic": "ОС · Конкурентность",
+  "slug": "deadlock-detect",
+  "title": "Детект дедлока: цикл в графе ожидания",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": [
+    "concurrency",
+    "deadlock",
+    "graph"
+  ]
+}

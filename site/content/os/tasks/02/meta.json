@@ -1,0 +1,10 @@
+{
+  "id": "02",
+  "num": 2,
+  "topic": "ОС · Планировщик CPU",
+  "slug": "sjf-turnaround",
+  "title": "SJF: среднее время оборота",
+  "type": "functional",
+  "difficulty": "medium",
+  "tags": ["scheduling", "sjf", "metrics"]
+}

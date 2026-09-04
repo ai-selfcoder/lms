@@ -1,0 +1,10 @@
+{
+  "id": "20",
+  "num": 20,
+  "topic": "Топик 5 · Highload-задачи",
+  "title": "Параллельный обход графа (BFS до 3 рукопожатий)",
+  "type": "functional",
+  "slug": "parallel-graph-bfs",
+  "difficulty": "hard",
+  "tags": ["bfs", "semaphore", "fan-out", "visited", "mutex", "highload"]
+}

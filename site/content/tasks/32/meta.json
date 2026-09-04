@@ -1,0 +1,10 @@
+{
+  "id": "32",
+  "num": 32,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Idle Timeout Pool (засыпающие воркеры)",
+  "type": "functional",
+  "slug": "idle-timeout-elastic-pool",
+  "difficulty": "hard",
+  "tags": ["elastic-pool", "worker-pool", "idle-timeout", "timer", "sync-primitives", "concurrency"]
+}

@@ -1,0 +1,27 @@
+# Keep the build context small for the deploy/ Dockerfiles (context = site/).
+**/node_modules
+**/.next
+**/dist
+**/out
+**/.turbo
+**/.vercel
+**/coverage
+
+# VCS / editor
+.git
+.gitignore
+**/.DS_Store
+**/*.log
+
+# Local databases & secrets — never bake into images
+**/*.db
+**/*.sqlite
+**/.env
+**/.env.*
+!**/.env.example
+
+# Don't recurse the deploy dir into its own context
+deploy/*.md
+
+# Prebuilt binaries
+grader/grader

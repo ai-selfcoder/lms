@@ -1,0 +1,7 @@
+{
+  "id": "09",
+  "num": 9,
+  "topic": "Топик 3 · Паттерны конкурентности",
+  "title": "Fan-In: Merge каналов",
+  "type": "functional"
+}

@@ -1,0 +1,238 @@
+<!-- @dsCard group="Textbook" viewport="1280x860" name="Учебник" subtitle="Chapter index, chapter page, topic page" -->
+<!-- @startingPoint section="Goroutine" subtitle="Technical handbook — index, chapter, topic views" viewport="1280x860" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goroutine — учебник</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;}
+  .mono{font-family:var(--font-mono);}
+  a{color:var(--text-link);}
+  .wrap{max-width:1200px;margin:0 auto;}
+  .navlink{color:var(--text-secondary);font-size:14px;font-weight:500;text-decoration:none;}
+  .navlink:hover{color:var(--text-primary);text-decoration:none;}
+  /* prose */
+  .prose h2{font-family:var(--font-sans);font-weight:600;font-size:26px;letter-spacing:-.015em;color:var(--text-primary);margin:40px 0 14px;scroll-margin-top:72px;}
+  .prose h2:first-child{margin-top:0;}
+  .prose h3{font-family:var(--font-sans);font-weight:600;font-size:18px;color:var(--text-primary);margin:28px 0 10px;}
+  .prose p{font-size:16px;line-height:27px;color:var(--text-secondary);margin:0 0 16px;}
+  .prose li{font-size:16px;line-height:27px;color:var(--text-secondary);margin-bottom:6px;}
+  .prose code{font-family:var(--font-mono);font-size:14px;color:var(--code-text);background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:4px;padding:1px 6px;}
+  .prose strong{color:var(--text-primary);font-weight:600;}
+  .codecard{background:var(--bg-inset);border:1px solid var(--border-default);border-radius:10px;overflow:hidden;margin:0 0 22px;}
+  .codecard pre{margin:0;padding:14px 16px;font-family:var(--font-mono);font-size:13.5px;line-height:22px;overflow-x:auto;}
+  .codehead{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border-subtle);background:var(--bg-surface);}
+  table.t{width:100%;border-collapse:collapse;margin:0 0 22px;font-size:14.5px;}
+  table.t th,table.t td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);}
+  table.t th{color:var(--text-tertiary);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.05em;}
+  table.t td:first-child{color:var(--text-primary);font-family:var(--font-mono);font-size:13px;}
+  .toclink{display:block;padding:5px 0 5px 12px;font-size:13px;color:var(--text-tertiary);text-decoration:none;border-left:2px solid var(--border-subtle);}
+  .toclink:hover{color:var(--text-secondary);text-decoration:none;}
+  .toclink.active{color:var(--accent-text);border-left-color:var(--accent);}
+  .chap{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:8px;text-decoration:none;transition:background var(--dur-fast);}
+  .chap:hover{background:var(--bg-hover);text-decoration:none;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .sidelink{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:6px;font-size:13.5px;color:var(--text-secondary);text-decoration:none;cursor:pointer;}
+  .sidelink:hover{background:var(--bg-hover);color:var(--text-primary);text-decoration:none;}
+  .sidelink.active{background:var(--accent-subtle);color:var(--text-primary);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="position:sticky;top:0;z-index:200;height:var(--header-h);display:flex;align-items:center;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg-canvas) 80%,transparent);border-bottom:1px solid var(--border-subtle);">
+  <div class="wrap" style="display:flex;align-items:center;gap:26px;width:100%;padding:0 28px;">
+    <a href="../landing/index.html" style="display:inline-flex;align-items:center;gap:9px;text-decoration:none;font-family:var(--font-sans);font-weight:600;font-size:17px;letter-spacing:-.02em;color:var(--text-primary);">
+      <svg width="24" height="24" viewBox="0 0 28 28"><rect width="28" height="28" rx="7" fill="var(--accent)"/><path d="M8 10.5h7.5a3.5 3.5 0 0 1 0 7H10l2.4-2.4M8 17.5h-.5" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      goroutine<span style="color:var(--accent-text)">.</span>
+    </a>
+    <nav style="display:flex;gap:22px;">
+      <a class="navlink" href="../trainer/index.html">Тренажёр</a>
+      <a class="navlink" href="#" style="color:var(--text-primary)">Учебник</a>
+    </nav>
+    <div style="margin-left:auto;display:flex;gap:6px;">
+      <button class="navlink" onclick="showView('index')" style="background:transparent;border:1px solid var(--border-default);height:32px;padding:0 12px;border-radius:7px;cursor:pointer;">Индекс</button>
+      <button class="navlink" onclick="showView('chapter')" style="background:transparent;border:1px solid var(--border-default);height:32px;padding:0 12px;border-radius:7px;cursor:pointer;">Глава</button>
+      <button class="navlink" onclick="showView('topic')" style="background:transparent;border:1px solid var(--border-default);height:32px;padding:0 12px;border-radius:7px;cursor:pointer;">Топик</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ VIEW: INDEX ============ -->
+<div id="view-index" class="view active">
+  <div class="wrap" style="padding:56px 28px 80px;max-width:880px;">
+    <span class="mono" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-text);">Учебник · 17 глав</span>
+    <h1 style="font-family:var(--font-sans);font-weight:700;font-size:42px;letter-spacing:-.02em;margin:14px 0 12px;color:var(--text-primary);">Конкурентность Go</h1>
+    <p style="font-size:18px;line-height:28px;color:var(--text-secondary);max-width:620px;margin:0 0 36px;">10 сквозных глав-основ и 7 вводных глав по топикам. Читаются линейно; каждая связана с задачами тренажёра.</p>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <span class="mono" style="font-size:12px;color:var(--text-tertiary);">прочитано 5/17</span>
+      <div style="flex:1;height:6px;background:var(--bg-inset);border:1px solid var(--border-subtle);border-radius:999px;overflow:hidden;"><div style="width:29%;height:100%;background:var(--accent);"></div></div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div class="mono" style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);margin:24px 0 6px;">Основы</div>
+      <div id="chaplist"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: CHAPTER ============ -->
+<div id="view-chapter" class="view">
+  <div class="wrap" style="display:grid;grid-template-columns:230px minmax(0,1fr) 200px;gap:40px;padding:36px 28px 100px;align-items:start;">
+    <!-- left chapter nav -->
+    <aside style="position:sticky;top:80px;">
+      <div class="mono" style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);padding:0 10px;margin-bottom:8px;">Основы</div>
+      <a class="sidelink" onclick="showView('chapter')">01 · Горутины</a>
+      <a class="sidelink" onclick="showView('chapter')">02 · Модель памяти</a>
+      <a class="sidelink active" onclick="showView('chapter')">03 · Каналы</a>
+      <a class="sidelink" onclick="showView('chapter')">04 · select</a>
+      <a class="sidelink" onclick="showView('chapter')">05 · sync-примитивы</a>
+      <a class="sidelink" onclick="showView('chapter')">06 · atomic</a>
+      <a class="sidelink" onclick="showView('chapter')">07 · context</a>
+      <a class="sidelink" onclick="showView('chapter')">08 · Паттерны</a>
+      <a class="sidelink" onclick="showView('chapter')">09 · Утечки и гонки</a>
+      <a class="sidelink" onclick="showView('chapter')">10 · Планировщик</a>
+    </aside>
+
+    <!-- content -->
+    <main class="prose">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <span class="mono" style="font-size:12px;color:var(--text-tertiary);">Глава 03 · Основы</span>
+        <span style="width:3px;height:3px;border-radius:50%;background:var(--text-disabled);"></span>
+        <span class="mono" style="font-size:12px;color:var(--text-tertiary);">~12 мин чтения</span>
+      </div>
+      <h1 style="font-family:var(--font-sans);font-weight:700;font-size:36px;letter-spacing:-.02em;margin:0 0 28px;color:var(--text-primary);">Каналы</h1>
+
+      <h2 id="s1">Что такое канал</h2>
+      <p>Канал — это типизированный конвейер, через который горутины обмениваются значениями. Это основной способ <strong>«не общаться через разделяемую память, а делиться памятью через общение»</strong>. Создаётся через <code>make</code>:</p>
+      <div class="codecard">
+        <div class="codehead"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="mono" style="font-size:12px;color:var(--text-secondary);">channels.go</span></div>
+        <pre><code><span style="color:var(--code-comment)">// небуферизованный — ёмкость 0</span>
+ch := <span style="color:var(--code-builtin)">make</span>(<span style="color:var(--code-keyword)">chan</span> <span style="color:var(--code-type)">int</span>)
+<span style="color:var(--code-comment)">// буферизованный — ёмкость 8</span>
+buf := <span style="color:var(--code-builtin)">make</span>(<span style="color:var(--code-keyword)">chan</span> <span style="color:var(--code-type)">int</span>, <span style="color:var(--code-number)">8</span>)
+
+ch <- <span style="color:var(--code-number)">42</span>      <span style="color:var(--code-comment)">// отправка</span>
+v := <-ch     <span style="color:var(--code-comment)">// приём</span></code></pre>
+      </div>
+
+      <h2 id="s2">Блокировка и направление</h2>
+      <p>Отправка в небуферизованный канал блокируется до тех пор, пока другой горутины не окажется готов получатель. Это даёт <strong>синхронизацию по передаче значения</strong>.</p>
+      <div style="display:flex;gap:12px;padding:14px 16px;background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:10px;margin:0 0 22px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning-fg)" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <div><div style="font-size:14px;font-weight:600;color:var(--warning-fg);margin-bottom:3px;">Грабли: дедлок</div><div style="font-size:14.5px;line-height:22px;color:var(--text-secondary);">Отправка в небуферизованный канал в той же горутине без получателя — мгновенный deadlock. Рантайм паникует: <code>all goroutines are asleep</code>.</div></div>
+      </div>
+      <p>Каналы можно ограничивать по направлению в сигнатурах — это документирует намерение и ловит ошибки на этапе компиляции:</p>
+      <table class="t">
+        <thead><tr><th>Тип</th><th>Значение</th></tr></thead>
+        <tbody>
+          <tr><td>chan T</td><td>двунаправленный</td></tr>
+          <tr><td>chan&lt;- T</td><td>только отправка</td></tr>
+          <tr><td>&lt;-chan T</td><td>только приём</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="s3">Закрытие канала</h2>
+      <p>Закрывает канал <strong>всегда отправитель</strong>, и только один раз. Приём из закрытого канала возвращает нулевое значение и <code>ok == false</code>. Диапазон <code>range</code> по каналу завершается на закрытии.</p>
+      <div style="display:flex;gap:12px;padding:14px 16px;background:var(--info-bg);border:1px solid var(--info-border);border-radius:10px;margin:0 0 22px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <div style="font-size:14.5px;line-height:22px;color:var(--text-secondary);">Связанные задачи: <a href="../trainer/index.html">04 · Закрытие канала-сигнала</a>, <a href="../trainer/index.html">10 · Fan-out / fan-in</a>.</div>
+      </div>
+
+      <!-- chapter nav -->
+      <div style="display:flex;justify-content:space-between;gap:16px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border-subtle);">
+        <a href="#" style="display:flex;flex-direction:column;gap:4px;text-decoration:none;"><span class="mono" style="font-size:12px;color:var(--text-tertiary);">← Назад</span><span style="font-size:15px;font-weight:600;color:var(--text-primary);">02 · Модель памяти</span></a>
+        <a href="#" style="display:flex;flex-direction:column;gap:4px;text-decoration:none;text-align:right;"><span class="mono" style="font-size:12px;color:var(--text-tertiary);">Дальше →</span><span style="font-size:15px;font-weight:600;color:var(--text-primary);">04 · select</span></a>
+      </div>
+    </main>
+
+    <!-- right TOC -->
+    <aside style="position:sticky;top:80px;">
+      <div class="mono" style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);margin-bottom:10px;">На этой странице</div>
+      <a class="toclink active" href="#s1">Что такое канал</a>
+      <a class="toclink" href="#s2">Блокировка и направление</a>
+      <a class="toclink" href="#s3">Закрытие канала</a>
+    </aside>
+  </div>
+</div>
+
+<!-- ============ VIEW: TOPIC ============ -->
+<div id="view-topic" class="view">
+  <div class="wrap" style="padding:48px 28px 90px;max-width:860px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <a class="navlink mono" onclick="showView('index')" style="font-size:12px;cursor:pointer;">Учебник</a>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-disabled)" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      <span class="mono" style="font-size:12px;color:var(--text-tertiary);">Топик 07</span>
+    </div>
+    <h1 style="font-family:var(--font-sans);font-weight:700;font-size:38px;letter-spacing:-.02em;margin:0 0 14px;color:var(--text-primary);">Воркер-пулы и конвейеры</h1>
+    <p style="font-size:18px;line-height:28px;color:var(--text-secondary);max-width:640px;margin:0 0 12px;">Как ограничивать параллелизм, строить конвейеры из стадий, корректно завершать работу и собирать результаты без гонок. Самый большой топик — 10 задач от простого пула до конвейера с отменой.</p>
+    <div style="display:flex;align-items:center;gap:16px;margin:24px 0 36px;">
+      <div style="flex:1;max-width:300px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span class="mono" style="font-size:12px;color:var(--text-secondary);">6/10 решено</span><span class="mono" style="font-size:12px;color:var(--success-fg);">60%</span></div><div style="height:6px;background:var(--bg-inset);border-radius:999px;overflow:hidden;"><div style="width:60%;height:100%;background:var(--success);"></div></div></div>
+      <a class="navlink" href="../trainer/index.html" style="margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:8px;background:var(--accent);color:#fff;font-weight:500;">К задачам <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+
+    <h2 style="font-family:var(--font-sans);font-weight:600;font-size:20px;color:var(--text-primary);margin:0 0 16px;">Задачи топика</h2>
+    <div id="topictasks" style="display:grid;gap:10px;"></div>
+  </div>
+</div>
+
+<script>
+const CHAPTERS = [
+  ['01','Горутины и их жизненный цикл','8 мин','read'],
+  ['02','Модель памяти Go','14 мин','read'],
+  ['03','Каналы','12 мин','active'],
+  ['04','select и мультиплексирование','9 мин','read'],
+  ['05','sync-примитивы','11 мин','read'],
+  ['06','atomic и lock-free','10 мин','todo'],
+  ['07','context','9 мин','todo'],
+  ['08','Паттерны конкурентности','16 мин','todo'],
+  ['09','Утечки и гонки','13 мин','todo'],
+  ['10','Планировщик горутин','12 мин','todo'],
+];
+const TOPIC_TASKS = [
+  [23,'Простой воркер-пул','easy','solved'],
+  [24,'Пул с результатами','medium','solved'],
+  [25,'Пул с ограничением параллелизма','medium','active'],
+  [26,'Конвейер из трёх стадий','medium','todo'],
+  [27,'Graceful shutdown пула','hard','todo'],
+  [28,'Динамическое масштабирование','hard','todo'],
+];
+const diffC = {easy:'var(--diff-easy)',medium:'var(--diff-medium)',hard:'var(--diff-hard)'};
+const check = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="var(--success)" opacity="0.16"/><path d="M7.5 12.5l3 3 6-6.5" stroke="var(--success)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const circle = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="var(--border-strong)" stroke-width="1.5"/></svg>';
+const dotActive = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6" fill="var(--accent)"/></svg>';
+
+document.getElementById('chaplist').innerHTML = CHAPTERS.map(([n,t,time,st])=>{
+  const mark = st==='read'?check:st==='active'?dotActive:circle;
+  const active = st==='active';
+  return `<a class="chap" onclick="showView('chapter')" style="${active?'background:var(--accent-subtle);':''}">
+    <span style="flex-shrink:0;display:inline-flex;">${mark}</span>
+    <span class="mono" style="font-size:13px;color:var(--text-tertiary);width:22px;">${n}</span>
+    <span style="flex:1;font-size:15.5px;font-weight:${active?600:500};color:var(--text-primary);">${t}</span>
+    <span class="mono" style="font-size:12px;color:var(--text-tertiary);">${time}</span>
+  </a>`;
+}).join('');
+
+document.getElementById('topictasks').innerHTML = TOPIC_TASKS.map(([id,t,d,st])=>{
+  const mark = st==='solved'?check:st==='active'?dotActive:circle;
+  return `<a href="../trainer/index.html" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg-elevated);border:1px solid ${st==='active'?'var(--border-strong)':'var(--border-default)'};border-radius:10px;text-decoration:none;">
+    <span style="flex-shrink:0;display:inline-flex;">${mark}</span>
+    <span class="mono" style="font-size:13px;color:var(--text-tertiary);width:22px;">${String(id).padStart(2,'0')}</span>
+    <span style="flex:1;font-size:15.5px;font-weight:500;color:var(--text-primary);">${t}</span>
+    <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:500;color:${diffC[d]};background:var(--bg-inset);border:1px solid var(--border-default);"><span style="width:6px;height:6px;border-radius:50%;background:${diffC[d]};"></span>${d}</span>
+  </a>`;
+}).join('');
+
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

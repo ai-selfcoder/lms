@@ -1,0 +1,10 @@
+{
+  "id": "26",
+  "num": 26,
+  "topic": "Топик 7 · Воркер-пулы и конвейеры",
+  "title": "Ordered Worker Pool",
+  "type": "functional",
+  "slug": "ordered-worker-pool",
+  "difficulty": "hard",
+  "tags": ["worker-pool", "pipeline", "channels", "ordering", "fan-out"]
+}

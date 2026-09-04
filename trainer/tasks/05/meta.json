@@ -1,0 +1,7 @@
+{
+  "id": "05",
+  "num": 5,
+  "topic": "Топик 2 · Синхронизация и sync",
+  "title": "Thread-safe Counter (Mutex vs atomic)",
+  "type": "functional"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "convoy",
+  "kind": "cpu-scheduler",
+  "title": "Convoy effect (FIFO)",
+  "explain": "Длинная задача пришла первой — короткие ждут за ней. Переключи политику на SJF и сравни среднее время оборота.",
+  "defaults": {
+    "policy": "FIFO",
+    "quantum": 2,
+    "jobs": [
+      { "name": "A", "arrival": 0, "burst": 8 },
+      { "name": "B", "arrival": 0, "burst": 2 },
+      { "name": "C", "arrival": 0, "burst": 2 }
+    ]
+  }
+}

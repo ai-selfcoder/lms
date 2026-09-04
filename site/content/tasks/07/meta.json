@@ -1,0 +1,10 @@
+{
+  "id": "07",
+  "num": 7,
+  "topic": "Топик 2 · Синхронизация и sync",
+  "title": "Idempotent Initializer (sync.Once)",
+  "type": "functional",
+  "slug": "idempotent-initializer-once",
+  "difficulty": "easy",
+  "tags": ["sync.Once", "lazy-init", "singleton"]
+}

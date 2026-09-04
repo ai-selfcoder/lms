@@ -1,0 +1,109 @@
+# ════════════════════════════════════════════════════════════════════════════
+#  Production stack for Coolify (or any Docker host).
+#
+#  Services:  web (Next.js)  ·  api (NestJS)  ·  grader (Go)
+#  Judge0 (code sandbox) runs externally — point JUDGE0_URL at it. No privileged
+#  containers needed in this stack.
+#
+#  Coolify: New Resource → Docker Compose → point at this file (deploy/docker-
+#  compose.yml). Set the env vars from deploy/.env.example as "Environment
+#  Variables", attach a domain to the `web` service (port 3000) and to `api`
+#  (port 4000). See deploy/README.md for the full walkthrough.
+#
+#  Locally:  cd site && docker compose -f deploy/docker-compose.yml up --build
+#
+#  Build contexts are relative to this file, so `..` is the site/ directory.
+# ════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ── Frontend + BFF API routes ──────────────────────────────────────────────
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      args:
+        # NEXT_PUBLIC_* is inlined at build time → must be a build arg.
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
+        SITE_URL: ${PUBLIC_WEB_URL:-http://localhost:3000}
+    environment:
+      PORT: "3000"
+      SITE_URL: ${PUBLIC_WEB_URL:-http://localhost:3000}
+      # Server-side hops stay on the internal network (service names).
+      API_URL: http://api:4000
+      GRADER_URL: http://grader:8080
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+      - grader
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── Auth + progress sync + AI-mentor (NestJS, Prisma/SQLite) ───────────────
+  api:
+    build:
+      context: ../api
+    environment:
+      # SQLite on a persistent volume — zero external DB to manage.
+      DATABASE_URL: "file:./prisma/dev.db"
+      PORT: "4000"
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in the environment}
+      CORS_ORIGIN: ${PUBLIC_WEB_URL:-http://localhost:3000}
+      WEB_ORIGIN: ${PUBLIC_WEB_URL:-http://localhost:3000}
+      API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
+      # OAuth (optional — leave blank to disable a provider).
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      # AI-mentor (the only paid feature). Without a key it returns 503 and the
+      # rest of the app keeps working.
+      MENTOR_PROVIDER: ${MENTOR_PROVIDER:-deepseek}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MENTOR_MODEL: ${MENTOR_MODEL:-claude-haiku-4-5}
+      MENTOR_MAX_TOKENS: ${MENTOR_MAX_TOKENS:-4000}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
+    volumes:
+      - api-db:/app/prisma
+    ports:
+      - "${API_PORT:-4000}:4000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/mentor/status"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ── Grader: forwards code to the (external) Judge0 sandbox ─────────────────
+  #  Judge0 runs separately at ${JUDGE0_URL}; this stack only needs the grader.
+  grader:
+    build:
+      context: ..
+      dockerfile: deploy/grader.Dockerfile
+    environment:
+      RUNNER: piston
+      PORT: "8080"
+      CONTENT_DIR: /content/tasks
+      # External Piston sandbox (separate host). Runs the custom `gotest`
+      # package (go test -race on Go 1.26). Keep its API firewalled to this host.
+      PISTON_URL: ${PISTON_URL}
+      PISTON_VERSION: ${PISTON_VERSION:-1.26.4}
+      ALLOWED_ORIGINS: ${PUBLIC_WEB_URL:-http://localhost:3000}
+      MAX_CODE_BYTES: "65536"
+      RATE_LIMIT_PER_MIN: "30"
+      REQUEST_TIMEOUT_SECONDS: "60"
+      # Grading queue: worker pool = max parallel grades to Piston.
+      CONCURRENCY: "16"
+      MAX_QUEUE: "200"
+      JOB_TTL_SECONDS: "120"
+    restart: unless-stopped
+
+volumes:
+  api-db:

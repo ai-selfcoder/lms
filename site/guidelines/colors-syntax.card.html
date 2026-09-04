@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Go syntax palette" subtitle="Token colours used by CodeBlock & the editor" -->
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+ body{margin:0;padding:20px;background:var(--bg-inset)}
+ pre{margin:0;font-family:var(--font-mono);font-size:14px;line-height:24px}
+ .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-family:var(--font-mono);font-size:11px}
+ .legend span{display:inline-flex;align-items:center;gap:5px;color:var(--text-tertiary)}
+ .legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+</style></head><body>
+<pre><span style="color:var(--code-keyword)">func</span> <span style="color:var(--code-func)">merge</span>(cs ...<span style="color:var(--code-keyword)">chan</span> <span style="color:var(--code-type)">int</span>) <span style="color:var(--code-keyword)">chan</span> <span style="color:var(--code-type)">int</span> {
+  out := <span style="color:var(--code-builtin)">make</span>(<span style="color:var(--code-keyword)">chan</span> <span style="color:var(--code-type)">int</span>) <span style="color:var(--code-comment)">// fan-in</span>
+  <span style="color:var(--code-keyword)">go</span> <span style="color:var(--code-keyword)">func</span>() { out <- <span style="color:var(--code-number)">42</span>; msg := <span style="color:var(--code-string)">"done"</span>; _ = msg }()
+  <span style="color:var(--code-keyword)">return</span> out
+}</pre>
+<div class="legend">
+ <span><i style="background:var(--code-keyword)"></i>keyword</span>
+ <span><i style="background:var(--code-type)"></i>type</span>
+ <span><i style="background:var(--code-func)"></i>func</span>
+ <span><i style="background:var(--code-builtin)"></i>builtin</span>
+ <span><i style="background:var(--code-string)"></i>string</span>
+ <span><i style="background:var(--code-number)"></i>number</span>
+ <span><i style="background:var(--code-comment)"></i>comment</span>
+</div>
+</body></html>

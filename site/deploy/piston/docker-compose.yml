@@ -1,0 +1,28 @@
+services:
+  piston:
+    build: .
+    image: piston-gotest:1.26.4
+    container_name: piston
+    restart: always
+    privileged: true
+    ports:
+      - "2000:2000"
+    environment:
+      PISTON_RUN_TIMEOUT: "60000"
+      PISTON_COMPILE_TIMEOUT: "60000"
+      PISTON_RUN_CPU_TIME: "60000"
+      PISTON_COMPILE_CPU_TIME: "60000"
+      PISTON_MAX_PROCESS_COUNT: "256"
+      PISTON_OUTPUT_MAX_SIZE: "4000000"
+      PISTON_RUN_MEMORY_LIMIT: "-1"
+      PISTON_COMPILE_MEMORY_LIMIT: "-1"
+      PISTON_MAX_FILE_SIZE: "536870912"
+    tmpfs:
+      - /piston/jobs:exec,uid=1000,gid=1000,mode=711,size=1024m
+    volumes:
+      # Persistent, warm Go build cache shared across all grades. Seeded from the
+      # baked /gocache in the image (go build -race std) on first start.
+      - gocache:/gocache
+
+volumes:
+  gocache:
