@@ -184,3 +184,197 @@ body {
   color: var(--code-text);
   white-space: pre;
 }
+/* ════════════════════════════════════════════════════════════════════════
+   Task workspace — responsive behaviour (laptop / mobile).
+   Desktop (>1100px): three-panel layout as-is.
+   ≤1100px: description panel becomes a slide-in right drawer with a scrim
+   and a header toggle; navigator can still be collapsed via the panel
+   button.
+   ≤800px: navigator is hidden by default and becomes an overlay drawer
+   when toggled; touch targets get a comfortable size; no horizontal
+   overflow anywhere.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.tw-root {
+  --tw-scrim: var(--bg-overlay, rgba(0, 0, 0, 0.4));
+}
+
+/* Drawer chrome exists only on small viewports. The DS Button sets display
+   via inline style, so hiding the header toggle needs !important. */
+.tw-scrim,
+.tw-details-close,
+.tw-details-toggle {
+  display: none;
+}
+.tw-details-toggle {
+  display: none !important;
+}
+.tw-details-head {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  /* Header: show the details toggle */
+  .tw-details-toggle {
+    display: inline-flex !important;
+  }
+
+  /* Description panel becomes a right-side drawer */
+  .tw-details {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100dvh;
+    width: min(420px, 92vw);
+    min-width: 0;
+    max-width: 92vw;
+    z-index: 60;
+    border-left: 1px solid var(--border-default);
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.25);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition:
+      transform var(--dur-slow, 240ms) var(--ease-out, ease-out),
+      visibility 0s linear var(--dur-slow, 240ms);
+  }
+  .tw-details[data-open] {
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+      transform var(--dur-slow, 240ms) var(--ease-out, ease-out),
+      visibility 0s;
+  }
+
+  /* Drawer header row (title + close) */
+  .tw-details-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 46px;
+    padding: 0 8px 0 18px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+  }
+  .tw-details-title {
+    font-family: var(--font-sans);
+    font-size: var(--label-md);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+  .tw-details-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .tw-details-close:hover {
+    color: var(--text-primary);
+    background: var(--bg-inset);
+  }
+
+  /* Scrim shared by both drawers */
+  .tw-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: var(--tw-scrim);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-slow, 240ms) var(--ease-out, ease-out);
+  }
+  .tw-scrim[data-open] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Narrow the navigator so the editor keeps room */
+  .tw-nav {
+    width: 240px !important;
+  }
+  .tw-nav[data-collapsed] {
+    width: 56px !important;
+  }
+}
+
+@media (max-width: 800px) {
+  /* Navigator hidden by default; opens as a left overlay drawer */
+  .tw-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100dvh;
+    width: min(320px, 88vw) !important;
+    z-index: 60;
+    border-right: 1px solid var(--border-default);
+    box-shadow: 12px 0 32px rgba(0, 0, 0, 0.25);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--dur-slow, 240ms) var(--ease-out, ease-out),
+      visibility 0s linear var(--dur-slow, 240ms);
+  }
+  .tw-nav[data-open] {
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+      transform var(--dur-slow, 240ms) var(--ease-out, ease-out),
+      visibility 0s;
+  }
+
+  /* Highlight the toggles while their drawer is open */
+  .tw-details-toggle[aria-expanded="true"],
+  .tw-nav-toggle[aria-expanded="true"] {
+    color: var(--accent-text);
+  }
+
+  /* Comfortable touch targets across workspace controls */
+  .tw-editor-toolbar button,
+  .tw-details-toggle,
+  .tw-details-close {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  .tw-nav button {
+    min-height: 40px;
+  }
+
+  /* Header icon buttons stay compact but tappable */
+  .tw-root header button {
+    min-height: 38px;
+    min-width: 38px;
+  }
+
+  /* Never overflow horizontally: panes clip instead of pushing page width */
+  .tw-root,
+  .tw-root main,
+  .tw-details,
+  .tw-nav {
+    min-width: 0;
+    max-width: 100vw;
+  }
+  .tw-root,
+  .tw-root main {
+    overflow-x: hidden;
+  }
+
+  /* Monaco must never push the page wide */
+  .monaco-editor,
+  .monaco-editor .overflow-guard {
+    max-width: 100%;
+  }
+
+  /* Terminal resize handle stays usable on touch */
+  .tw-root [data-drag-handle] {
+    touch-action: none;
+  }
+}

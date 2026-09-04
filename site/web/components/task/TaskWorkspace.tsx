@@ -27,6 +27,13 @@ const PanelIcon = (
     <path d="M9 4v16" />
   </svg>
 );
+const InfoIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4" />
+    <path d="M12 8h.01" />
+  </svg>
+);
 
 export function TaskWorkspace({
   task,
@@ -65,6 +72,49 @@ export function TaskWorkspace({
   const running = job.phase === "queued" || job.phase === "running";
   const result = job.result;
   const [collapsed, setCollapsed] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  // Viewport tier: matches the ≤800px CSS breakpoint where the navigator
+  // becomes an overlay drawer instead of an inline collapsible column.
+  const [isNarrow, setIsNarrow] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 800px)");
+    const update = () => {
+      setIsNarrow(mq.matches);
+      if (!mq.matches) setNavOpen(false); // drawer state is meaningless inline
+    };
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const handleNavToggle = useCallback(() => {
+    if (window.matchMedia("(max-width: 800px)").matches) {
+      if (!navOpen) {
+        setCollapsed(false);
+        setDetailsOpen(false);
+      }
+      setNavOpen((o) => !o);
+    } else {
+      setCollapsed((c) => !c);
+    }
+  }, [navOpen]);
+
+  const closeDrawers = useCallback(() => {
+    setNavOpen(false);
+    setDetailsOpen(false);
+  }, []);
+
+  // Escape closes whichever drawer is open.
+  useEffect(() => {
+    if (!navOpen && !detailsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeDrawers();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navOpen, detailsOpen, closeDrawers]);
 
   // Load persisted code (or starter) on task change.
   useEffect(() => {
@@ -100,8 +150,9 @@ export function TaskWorkspace({
 
   return (
     <div
+      className="tw-root"
       style={{
-        height: "100vh",
+        height: "100dvh",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -126,8 +177,10 @@ export function TaskWorkspace({
           hierarchy="ghost"
           size="sm"
           iconOnly
-          onClick={() => setCollapsed((c) => !c)}
+          className="tw-nav-toggle"
           aria-label="Список задач"
+          aria-expanded={isNarrow ? navOpen : collapsed ? false : true}
+          onClick={handleNavToggle}
           title="Список задач"
         >
           {PanelIcon}
@@ -186,6 +239,21 @@ export function TaskWorkspace({
 
         {/* prev / next */}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+          <Button
+            hierarchy="ghost"
+            size="sm"
+            iconOnly
+            className="tw-details-toggle"
+            aria-label="Условие задачи"
+            aria-expanded={detailsOpen}
+            title="Условие задачи"
+            onClick={() => {
+              setNavOpen(false);
+              setDetailsOpen((d) => !d);
+            }}
+          >
+            {InfoIcon}
+          </Button>
           {prev ? (
             <Button
               hierarchy="secondary"
@@ -223,9 +291,12 @@ export function TaskWorkspace({
 
       {/* BODY */}
       <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-        {/* left navigator */}
+        {/* left navigator — inline column on desktop, overlay drawer ≤800px */}
         <aside
-          className="task-workspace-nav"
+          className="tw-nav"
+          data-open={navOpen || undefined}
+          data-collapsed={collapsed || undefined}
+          aria-label="Навигатор задач"
           style={{
             width: collapsed ? 56 : 300,
             flexShrink: 0,
@@ -242,8 +313,8 @@ export function TaskWorkspace({
             collapsed={collapsed}
             course={course}
             onNavigate={() => {
-              if (typeof window !== "undefined" && window.innerWidth < 900)
-                setCollapsed(true);
+              setNavOpen(false);
+              if (window.innerWidth < 900) setCollapsed(true);
             }}
           />
         </aside>
@@ -264,17 +335,40 @@ export function TaskWorkspace({
           />
         </main>
 
-        {/* right: description tabs */}
+        {/* shared scrim behind either drawer */}
+        <div
+          className="tw-scrim"
+          data-open={(navOpen || detailsOpen) || undefined}
+          onClick={closeDrawers}
+          aria-hidden="true"
+        />
+        {/* right: description tabs (in-place on desktop, overlay drawer ≤1100px) */}
         <aside
-          className="task-workspace-description"
+          className="tw-details"
+          data-open={detailsOpen || undefined}
+          aria-label="Условие задачи"
+          aria-hidden={!detailsOpen && isNarrow ? true : undefined}
           style={{
             width: 380,
             flexShrink: 0,
-            minWidth: 300,
             borderLeft: "1px solid var(--border-subtle)",
             background: "var(--bg-surface)",
           }}
         >
+          <div className="tw-details-head" hidden={!isNarrow}>
+            <span className="tw-details-title">Условие</span>
+            <button
+              type="button"
+              className="tw-details-close"
+              aria-label="Закрыть условие"
+              onClick={() => setDetailsOpen(false)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
           <DescPanel
             taskId={task.id}
             problemNode={problemNode}

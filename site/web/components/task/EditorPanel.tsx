@@ -328,13 +328,15 @@ export function EditorPanel({
     >
       {/* toolbar */}
       <div
+        className="tw-editor-toolbar"
         style={{
-          height: 48,
+          minHeight: 48,
           flexShrink: 0,
           display: "flex",
           alignItems: "center",
+          flexWrap: "wrap",
           gap: 10,
-          padding: "0 14px",
+          padding: "4px 14px",
           borderBottom: "1px solid var(--border-subtle)",
           background: "var(--bg-surface)",
         }}
@@ -485,6 +487,10 @@ export function EditorPanel({
       {/* drag handle */}
       <div
         onPointerDown={onDrag}
+        data-drag-handle
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Изменить высоту терминала"
         style={{
           height: 6,
           flexShrink: 0,
@@ -494,6 +500,7 @@ export function EditorPanel({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          touchAction: "none",
         }}
       >
         <span
