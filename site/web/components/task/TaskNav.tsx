@@ -254,7 +254,19 @@ export function TaskNav({
           padding: "8px",
         }}
       >
-        {filteredNav.map((topic) => {
+        {filteredNav.length === 0 ? (
+          <div
+            style={{
+              padding: "16px 8px",
+              textAlign: "center",
+              fontSize: "var(--label-sm)",
+              color: "var(--text-tertiary)",
+            }}
+          >
+            Ничего не найдено
+          </div>
+        ) : (
+          filteredNav.map((topic) => {
           const review = topic.tasks.some((t) => t.type === "review");
           return (
             <div key={topic.num} style={{ marginBottom: collapsed ? 6 : 10 }}>
@@ -333,7 +345,8 @@ export function TaskNav({
               })}
             </div>
           );
-        })}
+          })
+        )}
       </nav>
 
       {!collapsed && (
