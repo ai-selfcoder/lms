@@ -138,8 +138,28 @@ export function AccountView({
       .slice(0, 8);
   }, [history, byId]);
 
+  const nextTask = useMemo(
+    () => tasks.find((task) => !isSolved(task.id)) ?? null,
+    [tasks, isSolved]
+  );
+
+  const completed = count === total && total > 0;
+
   return (
-    <div style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 28px 80px" }}>
+      <style>{`
+        .account-topic-row:hover,
+        .account-recent-row:hover { background: var(--bg-hover); }
+        @media (max-width: 680px) {
+          .account-page { padding: 28px 16px 56px !important; }
+          .account-page h1 { font-size: 30px !important; }
+          .account-topic-row { grid-template-columns: 24px minmax(0, 1fr) 58px !important; gap: 8px !important; }
+          .account-topic-row > div { display: none; }
+          .account-recent-row { grid-template-columns: 1fr auto !important; gap: 8px !important; }
+          .account-recent-row > span:first-child { display: none; }
+          .account-recent-row > span:last-child { grid-column: 2; grid-row: 1; }
+        }
+      `}</style>
+      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 28px 80px" }} className="account-page">
       {/* PAGE HEADER */}
       <div style={{ marginBottom: 28 }}>
         <span
@@ -242,6 +262,62 @@ export function AccountView({
           </Callout>
         )}
       </div>
+
+      {/* NEXT ACTION */}
+      <section
+        aria-labelledby="next-action-title"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 20,
+          flexWrap: "wrap",
+          padding: "18px 20px",
+          marginBottom: 24,
+          background: completed ? "var(--success-bg)" : "var(--accent-subtle)",
+          border: `var(--border-width) solid ${completed ? "var(--success-border)" : "var(--border-default)"}`,
+          borderRadius: "var(--radius-lg)",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <span
+            style={{
+              display: "block",
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              color: completed ? "var(--success-fg)" : "var(--accent-text)",
+              marginBottom: 6,
+            }}
+          >
+            {completed ? "Курс завершён" : "Следующий шаг"}
+          </span>
+          <h2
+            id="next-action-title"
+            style={{
+              margin: 0,
+              fontSize: 17,
+              lineHeight: "24px",
+              fontWeight: "var(--fw-semibold)",
+              color: "var(--text-primary)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {completed ? "Все задачи пройдены — отличный результат" : nextTask ? `${String(nextTask.num).padStart(2, "0")}. ${nextTask.title}` : "Начни с первой задачи"}
+          </h2>
+          <p style={{ margin: "4px 0 0", color: "var(--text-secondary)", fontSize: 13.5 }}>
+            {completed ? "Повтори сложные темы или изучи курс по операционным системам." : "Продолжи там, где остановился — прогресс сохранится автоматически."}
+          </p>
+        </div>
+        <Link href={completed ? "/go/topics" : nextTask ? `/go/tasks/${nextTask.slug}` : "/go/tasks/01"} style={{ flexShrink: 0, textDecoration: "none" }}>
+          <Button hierarchy={completed ? "secondary" : "accent"} size="md">
+            {completed ? "Открыть практику" : count > 0 ? "Продолжить" : "Начать курс"}
+          </Button>
+        </Link>
+      </section>
 
       {/* OVERALL PROGRESS */}
       <Panel title="Общий прогресс">
@@ -430,6 +506,7 @@ export function AccountView({
               return (
                 <div
                   key={t.num}
+                  className="account-topic-row"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "24px 1fr 180px 56px",
@@ -511,18 +588,19 @@ export function AccountView({
                 <Link
                   key={r.task.id}
                   href={`/go/tasks/${r.task.slug}`}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "90px 1fr auto 120px",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "13px 18px",
-                    textDecoration: "none",
-                    borderTop:
-                      i > 0
-                        ? "var(--border-width) solid var(--border-subtle)"
-                        : "none",
-                  }}
+                    className="account-recent-row"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "90px 1fr auto 120px",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: "13px 18px",
+                      textDecoration: "none",
+                      borderTop:
+                        i > 0
+                          ? "var(--border-width) solid var(--border-subtle)"
+                          : "none",
+                    }}
                 >
                   <span
                     style={{
