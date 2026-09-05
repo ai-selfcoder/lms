@@ -3,8 +3,8 @@ import { getTopicGroups, getAllTaskMeta } from "@/lib/content";
 import { TopicsIndexView } from "@/components/topics/TopicsIndexView";
 
 export const metadata: Metadata = {
-  title: "Топики",
-  description: "7 топиков по конкурентности Go с задачами и статусом решения.",
+  title: "Практика по топикам",
+  description: "Задачи по конкурентности Go, сгруппированные по темам и статусу решения.",
 };
 
 export default function TopicsPage() {

@@ -146,6 +146,7 @@ export function AccountView({
   const completed = count === total && total > 0;
 
   return (
+    <>
       <style>{`
         .account-topic-row:hover,
         .account-recent-row:hover { background: var(--bg-hover); }
@@ -312,7 +313,7 @@ export function AccountView({
             {completed ? "Повтори сложные темы или изучи курс по операционным системам." : "Продолжи там, где остановился — прогресс сохранится автоматически."}
           </p>
         </div>
-        <Link href={completed ? "/go/topics" : nextTask ? `/go/tasks/${nextTask.slug}` : "/go/tasks/01"} style={{ flexShrink: 0, textDecoration: "none" }}>
+        <Link href={completed ? "/go/practice" : nextTask ? `/go/tasks/${nextTask.slug}` : "/go/tasks/01"} style={{ flexShrink: 0, textDecoration: "none" }}>
           <Button hierarchy={completed ? "secondary" : "accent"} size="md">
             {completed ? "Открыть практику" : count > 0 ? "Продолжить" : "Начать курс"}
           </Button>
@@ -482,7 +483,7 @@ export function AccountView({
           title="Прогресс по топикам"
           aside={
             <Link
-              href="/go/topics"
+              href="/go/practice"
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: 12,
@@ -668,6 +669,7 @@ export function AccountView({
         </Panel>
       </div>
     </div>
+    </>
   );
 }
 

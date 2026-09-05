@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCourses } from "@/lib/courses";
-import { getAllTaskMeta, getBookChapters } from "@/lib/content";
+import { getAllTaskMeta, getBookChapters, getTopicGroups } from "@/lib/content";
 import { getAnnouncements, getRecentChapters } from "@/lib/news";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL, absUrl, organizationLd, websiteLd } from "@/lib/seo";
+import LandingView from "@/components/landing/LandingView";
 
 export const metadata: Metadata = {
-  title: "Бесплатные курсы и учебники по Go (Golang) и операционным системам онлайн",
+  title: "GraphLMS — лаборатория системного программирования",
   description:
-    "Открытые интерактивные учебники по системному программированию: курс по конкурентности Go (Golang) — горутины, каналы, sync, context — и курс по операционным системам. Теория, симуляторы, квизы и тренажёр с автопроверкой через go test -race — бесплатно. AI-разбор решений — Pro.",
+    "Три связанных интерактивных курса: основы Go, конкурентность Go и операционные системы. Теория, исполняемые задачи, симуляторы и проверка через go test -race.",
   keywords: [
     "курсы по Go",
     "курсы по Golang",
@@ -23,9 +24,9 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Бесплатные курсы и учебники по Go (Golang) и операционным системам",
+    title: "GraphLMS — лаборатория системного программирования",
     description:
-      "Интерактивные учебники по Go и операционным системам: теория, симуляторы, квизы и тренажёр с автопроверкой — бесплатно.",
+      "Основы Go, конкурентность и операционные системы: теория, задачи, симуляторы и исполняемая практика.",
     url: "/",
     type: "website",
   },
@@ -69,7 +70,7 @@ const QUICK: Record<string, Array<{ label: string; href: string }>> = {
   ],
   go: [
     { label: "Учебник", href: "/go/book" },
-    { label: "Топики", href: "/go/topics" },
+    { label: "Практика", href: "/go/practice" },
     { label: "Тренажёр", href: "/go/tasks/01" },
   ],
   os: [
@@ -80,6 +81,38 @@ const QUICK: Record<string, Array<{ label: string; href: string }>> = {
 };
 
 export default function HomePage() {
+  const goTasks = getAllTaskMeta("go");
+  const goTopics = getTopicGroups("go");
+  const goChapters = getBookChapters("go");
+  const courseCatalog = getCourses().map((course) => ({
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    short: course.short,
+    description: course.description,
+    accent: course.accent,
+    chapters: getBookChapters(course.id).length,
+    tasks: getAllTaskMeta(course.id).length,
+    href: course.id === "go" ? "/go/tasks/01" : course.id === "os" ? `/os/book/${getBookChapters(course.id)[0]?.slug ?? "process"}` : `/${course.slug}/book`,
+  }));
+  return (
+    <LandingView
+      taskCount={goTasks.length}
+      chapterCount={goChapters.length}
+      firstTaskSlug={goTasks[0]?.slug ?? null}
+      courses={courseCatalog}
+      topics={goTopics.map((t) => {
+        const diff = { e: 0, m: 0, h: 0 };
+        for (const task of t.tasks) {
+          if (task.difficulty === "easy") diff.e += 1;
+          else if (task.difficulty === "hard") diff.h += 1;
+          else diff.m += 1;
+        }
+        return { num: t.num, label: t.label, taskCount: t.tasks.length, taskIds: t.tasks.map((x) => x.id), diff, isReview: t.tasks.some((x) => x.type === "review" || x.type === "code-review") };
+      })}
+      chapters={goChapters.map((c) => ({ slug: c.slug, title: c.title, order: c.order }))}
+    />
+  );
   const courses = getCourses().map((c) => ({
     ...c,
     tasks: getAllTaskMeta(c.id).length,

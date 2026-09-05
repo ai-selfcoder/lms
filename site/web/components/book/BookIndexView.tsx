@@ -23,7 +23,7 @@ export function BookIndexView({
   title = "Конкурентность Go",
   description = "Сквозные главы-основы по конкурентности Go. Читаются линейно — от горутин и модели памяти до планировщика и боевых паттернов. Каждая связана с задачами тренажёра.",
   sectionLabel = "Основы",
-  emptyHref = "/go/topics",
+  emptyHref = "/go/practice",
   emptyLabel = "топики и тренажёр",
 }: {
   chapters: BookChapterItem[];
@@ -39,6 +39,7 @@ export function BookIndexView({
 }) {
   return (
     <div
+      className="book-index-page"
       style={{
         maxWidth: 880,
         margin: "0 auto",

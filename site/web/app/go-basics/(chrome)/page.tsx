@@ -126,7 +126,7 @@ export default function GoBasicsProgramPage() {
             <Link href={`/go-basics/book/${firstSlug}`} className="gb-cta gb-cta-solid" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, height: 44, padding: "0 20px", borderRadius: "var(--radius-md)", fontSize: 15, fontWeight: 500, background: accent, color: "#fff" }}>
               <PlayIcon /> Начать с первой главы
             </Link>
-            <Link href="/go/book/goroutines" className="gb-cta gb-cta-ghost" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, height: 44, padding: "0 18px", borderRadius: "var(--radius-md)", fontSize: 15, fontWeight: 500, border: "var(--border-width) solid var(--border-strong)", color: "var(--text-primary)" }}>
+            <Link href="/go-basics/book/goroutines-intro" className="gb-cta gb-cta-ghost" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, height: 44, padding: "0 18px", borderRadius: "var(--radius-md)", fontSize: 15, fontWeight: 500, border: "var(--border-width) solid var(--border-strong)", color: "var(--text-primary)" }}>
               Дальше: конкурентность
             </Link>
           </div>

@@ -134,7 +134,7 @@ export function AuthView() {
 
           <div className={styles.guest}>
             <Link
-              href="/go/topics"
+              href="/go/practice"
               style={{ textDecoration: "none", display: "block" }}
             >
               <Button hierarchy="secondary" fullWidth>
@@ -142,7 +142,7 @@ export function AuthView() {
               </Button>
             </Link>
             <p className={styles.guestNote}>
-              // регистрация не обязательна — прогресс работает и локально
+              {"// регистрация не обязательна — прогресс работает и локально"}
             </p>
           </div>
         </Card>

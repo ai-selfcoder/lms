@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProgress, loadCode, saveCode, clearCode } from "@/lib/progress";
+import { useAuth } from "@/lib/auth";
 import { Button, Logo } from "@/ds";
 import { TaskNav } from "./TaskNav";
 import { EditorPanel } from "./EditorPanel";
@@ -58,6 +59,7 @@ export function TaskWorkspace({
     [nav]
   );
   const { isSolved, markSolved } = useProgress(total);
+  const { user } = useAuth();
   const solved = isSolved(task.id);
 
   const [code, setCode] = useState(task.starter);
@@ -184,8 +186,23 @@ export function TaskWorkspace({
           )}
         </div>
 
-        {/* prev / next */}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+        {/* account + prev / next */}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <Link
+            href={user ? "/account" : "/auth"}
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: 12,
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+              padding: "5px 7px",
+              border: "1px solid var(--border-default)",
+              borderRadius: 5,
+            }}
+            title={user ? "Личный кабинет" : "Войти или создать аккаунт"}
+          >
+            {user ? "Кабинет" : "Войти"}
+          </Link>
           {prev ? (
             <Button
               hierarchy="secondary"

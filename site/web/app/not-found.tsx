@@ -56,7 +56,7 @@ export default function NotFound() {
         <Link href="/" style={btn(true)}>
           Все курсы
         </Link>
-        <Link href="/go/topics" style={btn(false)}>
+        <Link href="/go/practice" style={btn(false)}>
           К топикам Go
         </Link>
       </div>

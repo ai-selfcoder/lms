@@ -33,11 +33,11 @@ export function TopicDetailView({
   const firstTask = tasks[0];
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "48px 28px 90px" }}>
+    <div className="topic-detail-page" style={{ maxWidth: 860, margin: "0 auto", padding: "48px 28px 90px" }}>
       {/* breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <Link
-          href="/go/topics"
+          href="/go/practice"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "var(--label-sm)",

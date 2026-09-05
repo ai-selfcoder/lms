@@ -21,7 +21,7 @@ export function TopicsIndexView({
   total: number;
 }) {
   return (
-    <div style={{ maxWidth: 920, margin: "0 auto", padding: "56px 28px 80px" }}>
+    <div className="topics-index-page" style={{ maxWidth: 920, margin: "0 auto", padding: "56px 28px 80px" }}>
       <span
         style={{
           fontFamily: "var(--font-mono)",

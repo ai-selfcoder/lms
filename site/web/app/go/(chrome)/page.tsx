@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAllTaskMeta, getTopicGroups, getBookChapters } from "@/lib/content";
+import { getCourses } from "@/lib/courses";
 import LandingView from "@/components/landing/LandingView";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL, absUrl } from "@/lib/seo";
@@ -35,6 +36,17 @@ export default function LandingPage() {
   const tasks = getAllTaskMeta();
   const topics = getTopicGroups();
   const chapters = getBookChapters();
+  const courses = getCourses().map((course) => ({
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    short: course.short,
+    description: course.description,
+    accent: course.accent,
+    chapters: getBookChapters(course.id).length,
+    tasks: getAllTaskMeta(course.id).length,
+    href: course.id === "go" ? "/go/tasks/01" : course.id === "os" ? `/os/book/${getBookChapters(course.id)[0]?.slug ?? "process"}` : `/${course.slug}/book`,
+  }));
 
   const courseLd = {
     "@context": "https://schema.org",
@@ -56,6 +68,7 @@ export default function LandingPage() {
       taskCount={tasks.length}
       chapterCount={chapters.length}
       firstTaskSlug={tasks[0]?.slug ?? null}
+      courses={courses}
       topics={topics.map((t) => {
         const diff = { e: 0, m: 0, h: 0 };
         for (const task of t.tasks) {
