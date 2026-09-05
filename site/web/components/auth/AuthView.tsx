@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Callout, Card, Logo } from "@/ds";
 import { apiUrl, useAuth, AuthError, type AuthLevel } from "@/lib/auth";
+import styles from "./AuthView.module.css";
 
 type Mode = "login" | "register" | "verify" | "reset" | "onboarding";
 type Level = AuthLevel;
@@ -84,17 +85,9 @@ export function AuthView() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "calc(100vh - var(--header-h))",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px 72px",
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.brand}>
           <Link href="/" style={{ textDecoration: "none", display: "inline-flex" }}>
             <Logo size={26} />
           </Link>
@@ -132,14 +125,14 @@ export function AuthView() {
           {mode === "reset" && <ResetForm onBack={() => goto("login")} />}
 
           {error && (
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 20 }} role="alert" aria-live="assertive">
               <Callout tone="danger" title="Не получилось">
                 {error}
               </Callout>
             </div>
           )}
 
-          <div style={{ marginTop: 22 }}>
+          <div className={styles.guest}>
             <Link
               href="/go/topics"
               style={{ textDecoration: "none", display: "block" }}
@@ -148,17 +141,8 @@ export function AuthView() {
                 Продолжить без аккаунта →
               </Button>
             </Link>
-            <p
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 11.5,
-                lineHeight: "18px",
-                color: "var(--text-tertiary)",
-                textAlign: "center",
-                margin: "12px 0 0",
-              }}
-            >
-              {"// регистрация не обязательна — прогресс работает и локально"}
+            <p className={styles.guestNote}>
+              // регистрация не обязательна — прогресс работает и локально
             </p>
           </div>
         </Card>
@@ -202,21 +186,39 @@ function Heading({ title, sub }: { title: string; sub: string }) {
 }
 
 function Steps({ active }: { active: 1 | 2 | 3 }) {
+  const labels = ["Данные", "Почта", "Профиль"];
   return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-      {[1, 2, 3].map((i) => (
-        <span
-          key={i}
-          style={{
-            height: 3,
-            flex: 1,
-            borderRadius: 2,
-            background:
-              i <= active ? "var(--accent)" : "var(--border-default)",
-            transition: "background var(--dur-base)",
-          }}
-        />
-      ))}
+    <div
+      aria-label={`Шаг ${active} из 3`}
+      style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 20 }}
+    >
+      {labels.map((label, index) => {
+        const step = index + 1;
+        return (
+          <div key={label} style={{ display: "grid", gap: 6 }}>
+            <span
+              aria-hidden="true"
+              style={{
+                height: 4,
+                borderRadius: 4,
+                background: step <= active ? "var(--accent)" : "var(--border-default)",
+                transition: "background var(--dur-base)",
+              }}
+            />
+            <span
+              style={{
+                color: step === active ? "var(--text-primary)" : "var(--text-tertiary)",
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                letterSpacing: "0.03em",
+                textAlign: "center",
+              }}
+            >
+              {label}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -261,6 +263,7 @@ function Field({
         type={type}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        aria-label={label}
         value={value}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         onFocus={() => setFocus(true)}
@@ -743,7 +746,7 @@ function OnboardingForm({
           >
             Текущий уровень
           </span>
-          <div role="radiogroup" style={{ display: "grid", gap: 8 }}>
+      <div role="radiogroup" aria-label="Выбери текущий уровень" style={{ display: "grid", gap: 8 }}>
             {LEVELS.map((l) => (
               <LevelOption
                 key={l.value}
