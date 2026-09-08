@@ -4,6 +4,7 @@ import { getBookChapter, getBookChapters } from "@/lib/content";
 import { Mdx } from "@/components/Mdx";
 import { extractToc } from "@/lib/toc";
 import { BookChapterView } from "@/components/book/BookChapterView";
+import { getCourse } from "@/lib/courses";
 
 const COURSE = "go-basics";
 
@@ -41,6 +42,7 @@ export default async function GoBasicsChapterPage({
     title: c.title,
     index: i + 1,
   }));
+  const course = getCourse(COURSE);
 
   return (
     <BookChapterView
@@ -53,6 +55,8 @@ export default async function GoBasicsChapterPage({
       prev={prev ? { slug: prev.slug, title: prev.title } : null}
       next={next ? { slug: next.slug, title: next.title } : null}
       basePath="/go-basics/book"
+      version={course?.version}
+      versionDate={course?.versionDate}
     >
       <Mdx source={chapter.body} />
     </BookChapterView>

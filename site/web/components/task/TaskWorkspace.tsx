@@ -1,16 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useProgress, loadCode, saveCode, clearCode } from "@/lib/progress";
-import { useAuth } from "@/lib/auth";
+import { useProgress, loadCode, saveCode, clearCode, recordLearningEvent, recordTaskAttempt, useTaskAttempts } from "@/lib/progress";
+import { useInterviewSession } from "@/lib/interview";
+import { confirmTaskPass, useAuth } from "@/lib/auth";
+import { AnalyticsPreferences } from "@/components/Analytics";
 import { Button, Logo } from "@/ds";
 import { TaskNav } from "./TaskNav";
 import { EditorPanel } from "./EditorPanel";
 import { DescPanel } from "./DescPanel";
 import { useGradeJob } from "./useGradeJob";
-import type { NavTopic, TaskCore, TaskNeighbour } from "./types";
+import type { NavTopic, TaskCore, TaskLearningContext, TaskNeighbour } from "./types";
 
 const ChevL = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -37,9 +39,13 @@ export function TaskWorkspace({
   problemNode,
   theoryNode,
   solutionNode,
+  editorialNode,
   hasSolution,
   hints,
   course = "go",
+  contentVersion,
+  contentVersionDate,
+  learningContext,
 }: {
   task: TaskCore;
   nav: NavTopic[];
@@ -48,60 +54,117 @@ export function TaskWorkspace({
   problemNode: ReactNode;
   theoryNode: ReactNode | null;
   solutionNode: ReactNode | null;
+  editorialNode: ReactNode | null;
   hasSolution: boolean;
   hints: string[];
   /** Course slug — selects the grader task tree and prev/next URLs. */
   course?: string;
+  /** Published version of the task contract and learning material. */
+  contentVersion?: string;
+  contentVersionDate?: string;
+  learningContext?: TaskLearningContext;
 }) {
   const router = useRouter();
   const total = useMemo(
     () => nav.reduce((n, t) => n + t.tasks.length, 0),
     [nav]
   );
-  const { isSolved, markSolved } = useProgress(total);
+  const { isSolved, markSolved } = useProgress(total, course);
+  const attempts = useTaskAttempts(task.id, course);
   const { user } = useAuth();
-  const solved = isSolved(task.id);
+  const interviewSession = useInterviewSession();
+  const interviewMode = interviewSession && !interviewSession.endedAt && typeof window !== "undefined" && new URLSearchParams(window.location.search).has("interview");
+  const [interviewNow, setInterviewNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!interviewSession || interviewSession.endedAt) return;
+    setInterviewNow(Date.now());
+    const timer = window.setInterval(() => setInterviewNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [interviewSession]);
+  const interviewRemaining = interviewSession
+    ? Math.max(0, Math.ceil((new Date(interviewSession.startedAt).getTime() + interviewSession.durationSec * 1000 - interviewNow) / 1000))
+    : 0;
+  const solved = isSolved(task.id, course);
 
   const [code, setCode] = useState(task.starter);
+  const attemptCodeRef = useRef(task.starter);
+  const attemptTokenRef = useRef<string | null>(null);
+  const recordedAttemptRef = useRef<string | null>(null);
   const job = useGradeJob();
+  const { reset: resetJob, start: startJob } = job;
   const running = job.phase === "queued" || job.phase === "running";
   const result = job.result;
+  const confirmedPassProof = job.passProof;
   const [collapsed, setCollapsed] = useState(false);
 
   // Load persisted code (or starter) on task change.
   useEffect(() => {
-    const saved = loadCode(task.id);
+    const saved = loadCode(task.id, course);
     setCode(saved ?? task.starter);
-    job.reset();
-  }, [task.id, task.starter, job.reset]);
+    attemptCodeRef.current = saved ?? task.starter;
+    attemptTokenRef.current = null;
+    recordedAttemptRef.current = null;
+    resetJob();
+    recordLearningEvent("started", task.id, { courseId: course, eventId: `started:${course}:${task.id}` });
+  }, [task.id, task.starter, course, resetJob]);
 
   const handleChange = useCallback(
     (v: string) => {
       setCode(v);
-      saveCode(task.id, v);
+      attemptCodeRef.current = v;
+      saveCode(task.id, v, course);
     },
-    [task.id]
+    [task.id, course]
   );
 
   const handleReset = useCallback(() => {
     setCode(task.starter);
-    clearCode(task.id);
-    job.reset();
-  }, [task.id, task.starter, job.reset]);
+    attemptCodeRef.current = task.starter;
+    clearCode(task.id, course);
+    resetJob();
+  }, [task.id, task.starter, course, resetJob]);
 
   const handleRun = useCallback(() => {
     if (running) return;
-    job.start(task.id, course, code);
-  }, [running, job.start, task.id, course, code]);
+    attemptTokenRef.current = `${task.id}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+    recordedAttemptRef.current = null;
+    attemptCodeRef.current = code;
+    recordLearningEvent("run", task.id, { courseId: course });
+    startJob(task.id, course, code);
+  }, [running, startJob, task.id, course, code]);
 
   useEffect(() => {
-    if (job.phase === "done" && job.result?.pass && !job.result.error) {
-      markSolved(task.id);
+    if (job.phase === "done" && job.result && attemptTokenRef.current && recordedAttemptRef.current !== attemptTokenRef.current) {
+      const summary = job.result.summary ? `${job.result.summary.passed}/${job.result.summary.total} тестов` : undefined;
+      recordTaskAttempt({
+        taskId: task.id,
+        courseId: course,
+        code: attemptCodeRef.current,
+        passed: Boolean(job.result.pass && !job.result.error),
+        durationMs: job.result.durationMs ?? 0,
+        summary,
+      });
+      recordedAttemptRef.current = attemptTokenRef.current;
     }
-  }, [job.phase, job.result, markSolved, task.id]);
+    if (job.phase === "done" && job.result?.pass && !job.result.error) {
+      markSolved(task.id, course);
+      recordLearningEvent("passed", task.id, { courseId: course });
+      recordLearningEvent("completed", task.id, { courseId: course, eventId: `completed:${course}:${task.id}` });
+    } else if (job.phase === "done" && job.result && !job.result.pass) {
+      recordLearningEvent("failed", task.id, { courseId: course });
+    }
+  }, [job.phase, job.result, markSolved, task.id, course]);
+
+  useEffect(() => {
+    if (!user || !confirmedPassProof || !result?.pass || result.error) return;
+    void confirmTaskPass(`${course}:${task.id}`, confirmedPassProof).catch(() => {
+      // Local completion remains valid; the notes panel explains a delayed sync.
+    });
+  }, [confirmedPassProof, course, result?.error, result?.pass, task.id, user]);
 
   return (
     <div
+      className="task-shell"
       style={{
         height: "100vh",
         display: "flex",
@@ -184,10 +247,13 @@ export function TaskWorkspace({
               </svg>
             </span>
           )}
+          {interviewMode && <Link href={`/go/interview`} style={{ display: "inline-flex", alignItems: "center", gap: 5, marginLeft: 8, padding: "4px 7px", color: interviewRemaining < 120 ? "var(--danger)" : "var(--accent-text)", border: "1px solid var(--border-default)", borderRadius: 4, font: "11px var(--font-mono)", textDecoration: "none", whiteSpace: "nowrap" }}>интервью · {String(Math.floor(interviewRemaining / 60)).padStart(2, "0")}:{String(interviewRemaining % 60).padStart(2, "0")}</Link>}
         </div>
 
         {/* account + prev / next */}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {contentVersion && <Link href={`/changelog#v${contentVersion}`} title={contentVersionDate ? `Версия задания от ${contentVersionDate}` : "История изменений задания"} style={{ color: "var(--text-tertiary)", font: "11px var(--font-mono)", textDecoration: "none", whiteSpace: "nowrap" }}>v{contentVersion}</Link>}
+          <span className="task-analytics-preferences"><AnalyticsPreferences /></span>
           <Link
             href={user ? "/account" : "/auth"}
             style={{
@@ -239,9 +305,10 @@ export function TaskWorkspace({
       </header>
 
       {/* BODY */}
-      <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+      <div className="task-shell-body" style={{ flex: 1, minHeight: 0, display: "flex" }}>
         {/* left navigator */}
         <aside
+          className="task-left-nav"
           style={{
             width: collapsed ? 56 : 300,
             flexShrink: 0,
@@ -265,7 +332,7 @@ export function TaskWorkspace({
         </aside>
 
         {/* center: editor + terminal */}
-        <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <main className="task-editor" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <EditorPanel
             code={code}
             onChange={handleChange}
@@ -277,11 +344,19 @@ export function TaskWorkspace({
             taskTitle={task.title}
             taskType={task.type}
             queue={job.phase === "queued" ? { position: job.position, queueLength: job.queueLength } : null}
+            attempts={attempts}
+            onRestoreCode={(nextCode) => {
+              setCode(nextCode);
+              attemptCodeRef.current = nextCode;
+              saveCode(task.id, nextCode, course);
+              resetJob();
+            }}
           />
         </main>
 
         {/* right: description tabs */}
         <aside
+          className="task-description"
           style={{
             width: 380,
             flexShrink: 0,
@@ -295,12 +370,29 @@ export function TaskWorkspace({
             problemNode={problemNode}
             theoryNode={theoryNode}
             solutionNode={solutionNode}
+            editorialNode={editorialNode}
             hasSolution={hasSolution}
             solved={solved}
             hints={hints}
+            discussionTaskId={`${course}:${task.id}`}
+            learningContext={learningContext}
           />
         </aside>
       </div>
+      <style>{`@media (max-width: 900px) {
+        .task-shell { height: auto !important; min-height: 100vh; overflow: auto !important; }
+        .task-shell-body { flex-direction: column; overflow: visible; }
+        .task-left-nav { width: 100% !important; height: 180px; border-right: 0 !important; border-bottom: 1px solid var(--border-subtle); }
+        .task-left-nav > div { height: 100%; }
+        .task-editor { min-height: 560px; flex: none !important; }
+        .task-description { width: 100% !important; min-width: 0 !important; min-height: 380px; border-left: 0 !important; border-top: 1px solid var(--border-subtle); }
+      }
+      @media (max-width: 560px) {
+        .task-shell > header { gap: 7px !important; padding: 0 8px !important; }
+        .task-shell > header > div:last-child { gap: 4px !important; }
+        .task-shell > header > div:last-child a { display: none; }
+        .task-analytics-preferences { display: none; }
+      }`}</style>
     </div>
   );
 }

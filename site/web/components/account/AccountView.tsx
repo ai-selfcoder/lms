@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { Badge, Button, Callout, ProgressBar } from "@/ds";
-import { useProgress, useSolvedHistory } from "@/lib/progress";
+import { useProgress, useSolvedHistory, useLearningEvents } from "@/lib/progress";
 import { useAuth } from "@/lib/auth";
 
 interface TopicItem {
@@ -18,6 +18,16 @@ interface TaskItem {
   title: string;
   slug: string;
   difficulty?: string;
+}
+
+interface SprintItem {
+  id: string;
+  kind: "chapter" | "lab" | "task";
+  title: string;
+  href: string;
+  statusId: string;
+  label: string;
+  alternatives?: SprintItem[];
 }
 
 const WEEKS = 17;
@@ -75,13 +85,16 @@ export function AccountView({
   topics,
   tasks,
   total,
+  sprintItems = [],
 }: {
   topics: TopicItem[];
   tasks: TaskItem[];
   total: number;
+  sprintItems?: SprintItem[];
 }) {
-  const { isSolved, count, percent } = useProgress(total);
-  const history = useSolvedHistory();
+  const { isSolved, count, percent } = useProgress(total, "go");
+  const history = useSolvedHistory("go");
+  const events = useLearningEvents();
   const { user, logout } = useAuth();
 
   const byId = useMemo(() => {
@@ -144,12 +157,50 @@ export function AccountView({
   );
 
   const completed = count === total && total > 0;
+  const runs = events.filter((event) => event.type === "run").length;
+  const feedback = events.filter((event) => event.type === "passed" || event.type === "failed").length;
+  const sprint = useMemo(
+    () => sprintItems.map((item) => {
+      const options = item.alternatives ? [item, ...item.alternatives] : [item];
+      const selected = item.kind === "chapter"
+        ? options.find((option) => !events.some((event) => event.type === "started" && event.itemId === option.statusId)) ?? options[options.length - 1]
+        : item;
+      return {
+        ...selected,
+        alternatives: undefined,
+        complete: selected.kind === "task"
+          ? isSolved(selected.statusId)
+          : events.some((event) => event.type === "started" && event.itemId === selected.statusId),
+      };
+    }),
+    [events, isSolved, sprintItems],
+  );
+  const sprintDone = sprint.filter((item) => item.complete).length;
+  const repeatItems = useMemo(() => {
+    const goEvents = events.filter((event) => !event.courseId || event.courseId === "go");
+    const candidates = tasks.map((task) => {
+      const taskEvents = goEvents.filter((event) => event.itemId === task.id);
+      const failed = taskEvents.filter((event) => event.type === "failed").length;
+      const started = taskEvents.some((event) => event.type === "started");
+      const lastFailure = taskEvents
+        .filter((event) => event.type === "failed")
+        .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())[0];
+      return { task, failed, started, lastFailure: lastFailure?.at ?? "" };
+    });
+    const failed = candidates
+      .filter((item) => item.failed > 0)
+      .sort((a, b) => b.failed - a.failed || new Date(b.lastFailure).getTime() - new Date(a.lastFailure).getTime());
+    if (failed.length > 0) return failed.slice(0, 3);
+    return candidates.filter((item) => item.started && !isSolved(item.task.id)).slice(0, 3);
+  }, [events, isSolved, tasks]);
 
   return (
     <>
       <style>{`
         .account-topic-row:hover,
-        .account-recent-row:hover { background: var(--bg-hover); }
+        .account-recent-row:hover,
+        .account-sprint-row:hover,
+        .account-repeat-row:hover { background: var(--bg-hover); }
         @media (max-width: 680px) {
           .account-page { padding: 28px 16px 56px !important; }
           .account-page h1 { font-size: 30px !important; }
@@ -158,6 +209,11 @@ export function AccountView({
           .account-recent-row { grid-template-columns: 1fr auto !important; gap: 8px !important; }
           .account-recent-row > span:first-child { display: none; }
           .account-recent-row > span:last-child { grid-column: 2; grid-row: 1; }
+          .account-sprint-row { grid-template-columns: 24px minmax(0, 1fr) auto 16px !important; gap: 8px !important; padding-left: 16px !important; padding-right: 16px !important; }
+          .account-sprint-row strong { font-size: 13px !important; }
+          .account-repeat-row { grid-template-columns: 1fr auto !important; gap: 8px !important; }
+          .account-repeat-row > span:first-child { display: none; }
+          .account-repeat-row > span:last-child { grid-column: 2; grid-row: 1; }
         }
       `}</style>
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 28px 80px" }} className="account-page">
@@ -320,8 +376,96 @@ export function AccountView({
         </Link>
       </section>
 
+      {/* WEEKLY SPRINT */}
+      {sprint.length > 0 && (
+        <Panel
+          title="Недельный спринт"
+          aside={
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>
+              {sprintDone}/{sprint.length} · 60–90 мин
+            </span>
+          }
+        >
+          <div style={{ padding: "4px 0" }}>
+            {sprint.map((item, index) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="account-sprint-row"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "28px minmax(0, 1fr) auto 20px",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "13px 18px",
+                  textDecoration: "none",
+                  borderTop: index > 0 ? "var(--border-width) solid var(--border-subtle)" : "none",
+                }}
+              >
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".06em", color: item.complete ? "var(--success-fg)" : "var(--accent-text)", marginBottom: 3 }}>
+                    {item.label}
+                  </span>
+                  <strong style={{ display: "block", color: "var(--text-primary)", fontSize: 14, fontWeight: 550, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {item.title}
+                  </strong>
+                </span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: item.complete ? "var(--success-fg)" : "var(--text-tertiary)" }}>
+                  {item.complete ? "готово" : "начать"}
+                </span>
+                <span aria-hidden="true" style={{ color: item.complete ? "var(--success-fg)" : "var(--text-tertiary)", fontSize: 18 }}>
+                  {item.complete ? "✓" : "→"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      <section style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap", padding: "16px 18px", marginBottom: 24, border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", background: "var(--bg-elevated)" }}>
+        <div><span style={{ display: "block", color: "var(--accent-text)", font: "10px var(--font-mono)", letterSpacing: ".08em" }}>PROJECT TRACKS</span><strong style={{ display: "block", marginTop: 5, color: "var(--text-primary)", fontSize: 15 }}>Собери worker pool, rate limiter или page cache</strong><span style={{ display: "block", marginTop: 4, color: "var(--text-tertiary)", fontSize: 12 }}>Четыре коротких маршрута из задач и OS-лабораторий.</span></div>
+        <Link href="/projects" style={{ color: "var(--accent-text)", font: "12px var(--font-mono)", textDecoration: "none", whiteSpace: "nowrap" }}>Открыть треки →</Link>
+      </section>
+
+      {repeatItems.length > 0 && (
+        <Panel
+          title="Повторить слабое место"
+          aside={<span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>из истории попыток</span>}
+        >
+          <div style={{ padding: "4px 0" }}>
+            {repeatItems.map(({ task, failed }, index) => (
+              <Link
+                key={task.id}
+                href={`/go/tasks/${task.slug}`}
+                className="account-repeat-row"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "28px minmax(0, 1fr) auto 20px",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "13px 18px",
+                  textDecoration: "none",
+                  borderTop: index > 0 ? "var(--border-width) solid var(--border-subtle)" : "none",
+                }}
+              >
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>{String(task.num).padStart(2, "0")}</span>
+                <span style={{ minWidth: 0 }}>
+                  <strong style={{ display: "block", color: "var(--text-primary)", fontSize: 14, fontWeight: 550, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.title}</strong>
+                  <span style={{ display: "block", marginTop: 3, color: "var(--text-tertiary)", fontSize: 12 }}>{failed > 0 ? `${failed} ${failureLabel(failed)}` : "начато, но не завершено"}</span>
+                </span>
+                {task.difficulty && <Badge variant="difficulty" tone={diffTone(task.difficulty)} size="sm">{diffTone(task.difficulty)}</Badge>}
+                <span aria-hidden="true" style={{ color: "var(--text-tertiary)", fontSize: 18 }}>→</span>
+              </Link>
+            ))}
+          </div>
+        </Panel>
+      )}
+
       {/* OVERALL PROGRESS */}
-      <Panel title="Общий прогресс">
+      <Panel title="Общий прогресс" aside={<Link href="/account/report" style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--accent-text)", textDecoration: "none" }}>skill report →</Link>}>
         <div style={{ padding: "18px 18px" }}>
           <div
             style={{
@@ -366,6 +510,11 @@ export function AccountView({
             </span>
           </div>
           <ProgressBar value={count} max={total || 1} tone="accent" />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 14, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>
+            <span><b style={{ color: "var(--text-secondary)" }}>{runs}</b> запусков</span>
+            <span><b style={{ color: "var(--text-secondary)" }}>{feedback}</b> проверок</span>
+            <span><b style={{ color: "var(--text-secondary)" }}>{events.filter((event) => event.type === "hint").length}</b> подсказок</span>
+          </div>
         </div>
       </Panel>
 
@@ -686,6 +835,14 @@ const DIFFICULTY: Record<string, DiffTone> = {
 };
 function diffTone(d: string): DiffTone {
   return DIFFICULTY[d.toLowerCase().trim()] ?? "medium";
+}
+
+function failureLabel(n: number): string {
+  const n10 = n % 10;
+  const n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return "неудачная попытка";
+  if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return "неудачные попытки";
+  return "неудачных попыток";
 }
 
 function Panel({

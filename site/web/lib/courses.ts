@@ -22,6 +22,10 @@ export interface Course {
   contentDir: string;
   order: number;
   kind: "trainer" | "course";
+  /** Semver snapshot of the course content and task contracts. */
+  version: string;
+  /** ISO date when this content snapshot was published. */
+  versionDate: string;
 }
 
 /** The Go course is the historical default — used when no course is given. */

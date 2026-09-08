@@ -33,6 +33,8 @@ Paste the keys from [`.env.example`](./.env.example) into Coolify’s **Environm
 - `PUBLIC_WEB_URL` / `PUBLIC_API_URL` — the two domains you’ll attach below.
   `PUBLIC_API_URL` is **baked into the web bundle at build** → if you change it, redeploy `web`.
 - `JWT_SECRET` — `openssl rand -hex 32` (secret).
+- `GRADER_SYNC_SECRET` — отдельный `openssl rand -hex 32`, общий только для
+  `web` и `api`; подтверждает PASS для закрытых solution notes.
 - `PISTON_URL` — your external Piston host (e.g. `http://201.51.24.60:2000`).
   Must run the custom `gotest` package — see [PISTON.md](./PISTON.md).
 - OAuth + AI keys are optional (see comments in `.env.example`).

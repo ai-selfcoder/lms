@@ -22,7 +22,7 @@ export function TaskNav({
   course?: string;
 }) {
   const router = useRouter();
-  const { isSolved, count, percent } = useProgress(total);
+  const { isSolved, count, percent } = useProgress(total, course);
 
   const go = (slug: string) => {
     router.push(`/${course}/tasks/${slug}`);
@@ -161,7 +161,7 @@ export function TaskNav({
               )}
 
               {topic.tasks.map((t) => {
-                const solved = isSolved(t.id);
+                const solved = isSolved(t.id, course);
                 const active = t.id === activeId;
                 const status: "solved" | "active" | "todo" = solved
                   ? "solved"

@@ -1,0 +1,51 @@
+[
+  {
+    "version": "0.4.0",
+    "date": "2026-09-06",
+    "type": "feature",
+    "title": "Learning loop стал сквозным",
+    "summary": "Добавлены недельные спринты, skill graph, режим интервью, проектные треки и shareable отчёт по навыкам.",
+    "links": [
+      { "label": "Навыки Go", "href": "/go/skills" },
+      { "label": "Режим интервью", "href": "/go/interview" },
+      { "label": "Проекты", "href": "/projects" }
+    ],
+    "courses": ["go-basics", "go", "os"]
+  },
+  {
+    "version": "0.3.0",
+    "date": "2026-08-18",
+    "type": "feature",
+    "title": "OS labs и воспроизводимые эксперименты",
+    "summary": "Симуляторы CPU, памяти, диска и contention получили единый формат, сравнение политик и shareable state в ссылке.",
+    "links": [
+      { "label": "Галерея лабораторий", "href": "/os/labs" },
+      { "label": "Симулятор scheduler", "href": "/os/sim/scheduler" }
+    ],
+    "courses": ["os"]
+  },
+  {
+    "version": "0.2.0",
+    "date": "2026-07-02",
+    "type": "content",
+    "title": "Обновлён курс операционных систем",
+    "summary": "В учебник добавлены главы про адресное пространство, paging, locks, namespaces и I/O с runnable-примерами и задачами.",
+    "links": [
+      { "label": "Курс ОС", "href": "/os" },
+      { "label": "Учебник ОС", "href": "/os/book/process" }
+    ],
+    "courses": ["os"]
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-06-20",
+    "type": "release",
+    "title": "Первый публичный релиз GraphLMS",
+    "summary": "Основы Go, конкурентность Go и интерактивный тренажёр с проверкой go test -race доступны без регистрации.",
+    "links": [
+      { "label": "Начать с первой задачи", "href": "/go/tasks/01" },
+      { "label": "Все программы", "href": "/" }
+    ],
+    "courses": ["go-basics", "go", "os"]
+  }
+]

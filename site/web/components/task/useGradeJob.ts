@@ -10,6 +10,7 @@ export interface GradeState {
   position: number;
   queueLength: number;
   result: RunResult | null;
+  passProof: string | null;
 }
 
 interface StatusResponse {
@@ -17,13 +18,14 @@ interface StatusResponse {
   position?: number;
   queueLength?: number;
   result?: RunResult;
+  passProof?: string;
   message?: string;
 }
 
 const POLL_MS = 1000;
 const MAX_POLL_MS = 4 * 60 * 1000; // give up after ~4 minutes
 
-const IDLE: GradeState = { phase: "idle", position: 0, queueLength: 0, result: null };
+const IDLE: GradeState = { phase: "idle", position: 0, queueLength: 0, result: null, passProof: null };
 
 /** Submit a grade and poll its queue position + verdict. */
 export function useGradeJob() {
@@ -62,6 +64,7 @@ export function useGradeJob() {
         compileError: false,
         error: true,
       },
+      passProof: null,
     });
   }, []);
 
@@ -88,7 +91,7 @@ export function useGradeJob() {
       const phase = data.status ?? "error";
       if (phase === "done") {
         if (data.result) {
-          setState({ phase: "done", position: 0, queueLength: 0, result: data.result });
+          setState({ phase: "done", position: 0, queueLength: 0, result: data.result, passProof: data.passProof ?? null });
         } else {
           finishError("Грейдер не вернул результат. Попробуй ещё раз.");
         }
@@ -103,6 +106,7 @@ export function useGradeJob() {
         position: data.position ?? 0,
         queueLength: data.queueLength ?? 0,
         result: null,
+        passProof: null,
       });
       timer.current = setTimeout(() => poll(jobId), POLL_MS);
     },
@@ -113,7 +117,7 @@ export function useGradeJob() {
     async (taskId: string, course: string, code: string) => {
       stop();
       startedAt.current = Date.now();
-      setState({ phase: "queued", position: 0, queueLength: 0, result: null });
+      setState({ phase: "queued", position: 0, queueLength: 0, result: null, passProof: null });
       let data: { jobId?: string; message?: string };
       try {
         const res = await fetch("/api/run", {

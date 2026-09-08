@@ -4,9 +4,9 @@ Minimal NestJS backend for the **goroutine** Go-learning app. Scope: email+passw
 auth (JWT) and cross-device **progress sync**. Grading is handled by the Go grader
 (`site/grader`) — this service has no code runner.
 
-> Progress currently lives in the web app's `localStorage`. These endpoints exist so
-> that once a user logs in, that local progress can be pushed up (`PUT /me/progress`)
-> and pulled back on another device (`GET /me/progress`).
+> Progress and learning events start in the web app's `localStorage`. Once a user
+> logs in, both are synced to the API for cross-device continuity and aggregate
+> product analytics.
 
 ## Stack
 
@@ -35,9 +35,23 @@ Build & run production: `npm run build && npm start`.
 | `API_URL`     | `http://localhost:4000`  | this API's public base (used to build provider callback URLs) |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | _(empty)_ | GitHub OAuth app creds (optional) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | _(empty)_ | Google OAuth client creds (optional) |
+| `MENTOR_PROVIDER` | `deepseek` | AI review provider: `deepseek` or `anthropic` |
+| `DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` | _(empty)_ | Provider credentials (one is required for mentor reviews) |
+| `MENTOR_RATE_LIMIT` | `5` | Maximum mentor reviews per account in the rolling window |
+| `MENTOR_RATE_WINDOW_MS` | `600000` | Mentor rate-limit window in milliseconds |
+| `MENTOR_REQUEST_TIMEOUT_MS` | `30000` | Maximum provider request duration in milliseconds |
 
 OAuth is **optional**: leave a provider's creds empty and the app still boots
 normally. Its start route then returns `501 { message: "... OAuth не настроен" }`.
+
+### AI mentor
+
+`GET /mentor/status` is public and reports whether a provider key is configured.
+`POST /mentor/review` requires the authenticated session and accepts a bounded
+task id, code listing, problem statement, and test output. Reviews are limited
+per account by the rolling window above and return HTTP `429` with a
+`Retry-After` header when the limit is reached. Provider calls are aborted after
+`MENTOR_REQUEST_TIMEOUT_MS` and surfaced as a temporary `503`.
 
 ## Endpoints
 
@@ -115,11 +129,67 @@ curl -s -X PUT http://localhost:4000/me/progress/hello \
   -d '{"solved":true,"code":"package main"}'
 ```
 
+### Task discussions
+
+Comments are scoped to a namespaced task id such as `go:01` or `os:01`. Reading is
+public; posting requires the authenticated session and the readable CSRF cookie
+(`X-CSRF-Token` header, as with other `/me/*` mutations).
+
+```bash
+# List the latest 100 comments in chronological order
+curl -s http://localhost:4000/tasks/go%3A01/comments
+
+# Add a comment (body is trimmed and limited to 2000 characters)
+curl -s -X POST http://localhost:4000/me/tasks/go%3A01/comments \
+  -H "authorization: Bearer $TOKEN" \
+  -H "X-CSRF-Token: $CSRF" -H 'content-type: application/json' \
+  -d '{"body":"Почему здесь нужен unbuffered канал?"}'
+```
+
+### Solution notes
+
+`GET/POST /me/tasks/:course:taskId/solution-notes` is a small, text-only
+community surface for a task. Both reading and publishing require an
+authenticated learner to have a trusted grader `PASS` for that exact course
+and task. The Next.js server signs a five-minute pass proof with the shared
+`GRADER_SYNC_SECRET`; the browser redeems it at `POST /me/task-passes` only in
+the context of its own authenticated API session. The endpoint returns a stable anonymous alias, never an email, and
+rejects fenced or recognizable Go source so notes explain an idea without
+becoming a solution dump. A learner has one editable note per task.
+
+### Learning events
+
+Events are client-generated and idempotent by `id`; posting the same event again is
+safe. The API accepts at most 100 events per request. Supported types are
+`started`, `run`, `failed`, `passed`, `hint`, and `completed`.
+
+```bash
+curl -s -X POST http://localhost:4000/me/events \
+  -H "authorization: Bearer $TOKEN" -H "X-CSRF-Token: $CSRF" \
+  -H 'content-type: application/json' \
+  -d '{"events":[{"id":"run:go:go:01:demo","type":"run","itemId":"go:01","courseId":"go","at":"2026-09-06T00:00:00.000Z"}]}'
+```
+
 ## Docker
 
 ```bash
 docker compose up --build   # api on :4000, sqlite persisted in a named volume
 ```
+
+### Quality leaderboard
+
+`GET /leaderboard` returns an anonymized ranking based on pass rate and solved
+tasks. Only users with at least three checks (`passed` or `failed`) are included;
+no email, code, timing, or raw event data is exposed. Filter by course with
+`?courseId=go` or `?courseId=os`.
+
+### Admin quality signals
+
+`GET /admin/overview` is restricted to emails in `ADMIN_EMAILS`. Alongside the
+funnel summary it returns up to eight task-quality signals derived from the last
+30 days of learning events. A signal needs at least three grader responses and
+contains only aggregate feedback, FAIL rate, recovery count, and completion
+count - never learner identity or source code.
 
 `Dockerfile` runs `prisma migrate deploy` on startup. See the comment in
 `docker-compose.yml` / `prisma/schema.prisma` for the one-line switch to Postgres.

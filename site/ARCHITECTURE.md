@@ -10,11 +10,12 @@
   теория) статически рендерятся; страница задачи — клиентский Monaco-редактор.
   Деплой: Vercel (web) + отдельный сервис грейдера.
 - **grader/** — Go HTTP-сервис. Принимает решение, собирает мультифайловую
-  посылку и исполняет её в **self-hosted Judge0** (изолированная песочница:
-  без сети, лимиты CPU/RAM/время). Абстракция `Runner` имеет две реализации:
-  `LocalRunner` (`go test` локально, для dev) и `Judge0Runner` (прод).
-- **infra/** — `docker-compose.yml`: Judge0 (server + workers), Postgres, Redis,
-  grader, web. Поднимается одной командой.
+  посылку и исполняет её в sandbox backend (Piston в текущем deploy, Judge0 в
+  legacy `infra`; без сети, лимиты CPU/RAM/время). Абстракция `Runner` включает
+  `LocalRunner` (dev), `PistonRunner` (текущий prod) и `Judge0Runner` (legacy).
+- **infra/** — legacy `docker-compose.yml` с self-hosted Judge0 (server + workers),
+  Postgres, Redis, grader, web. Текущий production compose находится в
+  **deploy/** и использует внешний Piston без privileged-контейнеров.
 - **content/** — единый источник правды по задачам и тексту учебника (MDX/Go).
 
 ## Контракт API грейдера
@@ -30,16 +31,17 @@
 Next.js вызывает грейдер из server route (`/app/api/run`), не напрямую из
 браузера (ключи/URL грейдера — серверные).
 
-## Как грейдер исполняет посылку (Judge0)
+## Как грейдер исполняет посылку (Piston / Judge0)
 
-Используется язык Judge0 **«Multi-file program»**. В песочницу уходит zip:
+В текущем production используется Piston package **`gotest`**. В legacy Judge0
+стеке используется язык **«Multi-file program»**. В обоих случаях в sandbox
+уходят только эти файлы:
 ```
 go.mod              # module solution; go 1.25
 solution.go         # код пользователя
 solution_test.go    # скрытый грейдер (из content/tasks/NN)
 support.go          # опционально (из content/tasks/NN)
-compile             # скрипт сборки:  go test -race -c -o solution.test ./...
-run                 # скрипт запуска: ./solution.test -test.v -test.timeout 30s
+compile / run       # backend запускает go test -json -race ./...
 ```
 Лимиты: wall ~40s, память ↑ (race-сборка прожорлива), сеть отключена. Вердикт:
 exit code 0 → PASS. `compile`-фейл → `compileError:true`. Превышение wall →
@@ -67,6 +69,7 @@ support.go         # опц. фикстуры
 
 ## Безопасность (прод)
 
-- Untrusted-код исполняется ТОЛЬКО в Judge0 (cgroups/seccomp, без сети).
+- Untrusted-код исполняется ТОЛЬКО в Piston (production) или Judge0 (legacy),
+  в изолированной песочнице без сети.
 - Грейдер валидирует размер кода, rate-limit на IP, таймауты.
 - Эталоны и тесты не покидают сервер; в песочницу едет только то, что нужно.

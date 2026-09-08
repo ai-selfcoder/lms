@@ -2,7 +2,7 @@
 #  Production stack for Coolify (or any Docker host).
 #
 #  Services:  web (Next.js)  ·  api (NestJS)  ·  grader (Go)
-#  Judge0 (code sandbox) runs externally — point JUDGE0_URL at it. No privileged
+#  Piston (code sandbox) runs externally — point PISTON_URL at it. No privileged
 #  containers needed in this stack.
 #
 #  Coolify: New Resource → Docker Compose → point at this file (deploy/docker-
@@ -31,6 +31,7 @@ services:
       # Server-side hops stay on the internal network (service names).
       API_URL: http://api:4000
       GRADER_URL: http://grader:8080
+      GRADER_SYNC_SECRET: ${GRADER_SYNC_SECRET:?set GRADER_SYNC_SECRET in the environment}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
@@ -53,6 +54,7 @@ services:
       DATABASE_URL: "file:./prisma/dev.db"
       PORT: "4000"
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in the environment}
+      GRADER_SYNC_SECRET: ${GRADER_SYNC_SECRET:?set GRADER_SYNC_SECRET in the environment}
       CORS_ORIGIN: ${PUBLIC_WEB_URL:-http://localhost:3000}
       WEB_ORIGIN: ${PUBLIC_WEB_URL:-http://localhost:3000}
       API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
@@ -81,8 +83,8 @@ services:
       start_period: 20s
     restart: unless-stopped
 
-  # ── Grader: forwards code to the (external) Judge0 sandbox ─────────────────
-  #  Judge0 runs separately at ${JUDGE0_URL}; this stack only needs the grader.
+  # ── Grader: forwards code to the (external) Piston sandbox ────────────────
+  #  Piston runs separately at ${PISTON_URL}; this stack only needs the grader.
   grader:
     build:
       context: ..

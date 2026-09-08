@@ -9,6 +9,9 @@ import {
 import { Mdx } from "@/components/Mdx";
 import { TaskWorkspace } from "@/components/task/TaskWorkspace";
 import type { Difficulty, NavTask, NavTopic } from "@/components/task/types";
+import { getCourse } from "@/lib/courses";
+import { getTaskLearningContext } from "@/lib/learning";
+import type { TaskLearningContext } from "@/components/task/types";
 
 function normDifficulty(d?: string): Difficulty {
   return d === "easy" || d === "hard" ? d : "medium";
@@ -42,6 +45,8 @@ export default async function TaskPage({
   if (!task) notFound();
 
   const { prev, next } = getTaskNeighbours(slug);
+  const course = getCourse("go");
+  const learningContext: TaskLearningContext | undefined = getTaskLearningContext(`go:task:${task.id}`) ?? undefined;
 
   // Build the grouped nav for the left sidebar.
   const nav: NavTopic[] = getTopicGroups().map((g) => ({
@@ -63,6 +68,7 @@ export default async function TaskPage({
   const problemNode = <Mdx source={task.problem} />;
   const theoryNode = task.theory ? <Mdx source={task.theory} /> : null;
   const solutionNode = task.solution ? <Mdx source={task.solution} /> : null;
+  const editorialNode = task.editorial ? <Mdx source={task.editorial} /> : null;
 
   // Reference fallback for the "Решение" tab when there's no solution.mdx.
   const referenceNode =
@@ -90,8 +96,12 @@ export default async function TaskPage({
       problemNode={problemNode}
       theoryNode={theoryNode}
       solutionNode={solutionNode ?? referenceNode}
+      editorialNode={editorialNode}
       hasSolution={Boolean(solutionNode || referenceNode)}
       hints={task.hints}
+      contentVersion={course?.version}
+      contentVersionDate={course?.versionDate}
+      learningContext={learningContext}
     />
   );
 }

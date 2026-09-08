@@ -8,7 +8,9 @@
     "accent": "#8b5cf6",
     "contentDir": "go-basics",
     "order": 0,
-    "kind": "course"
+    "kind": "course",
+    "version": "0.4.0",
+    "versionDate": "2026-09-06"
   },
   {
     "id": "go",
@@ -19,7 +21,9 @@
     "accent": "#5b9dff",
     "contentDir": "",
     "order": 1,
-    "kind": "trainer"
+    "kind": "trainer",
+    "version": "0.4.0",
+    "versionDate": "2026-09-06"
   },
   {
     "id": "os",
@@ -30,6 +34,8 @@
     "accent": "#46c79a",
     "contentDir": "os",
     "order": 2,
-    "kind": "course"
+    "kind": "course",
+    "version": "0.4.0",
+    "versionDate": "2026-09-06"
   }
 ]

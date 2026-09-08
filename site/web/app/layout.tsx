@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@/components/Analytics";
+import { LearningEventSync } from "@/components/LearningEventSync";
+import { ProgressSync } from "@/components/ProgressSync";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import "@/ds/styles.css";
 import "./globals.css";
@@ -79,6 +81,8 @@ export default function RootLayout({
       <body>
         {children}
         <Analytics />
+        <LearningEventSync />
+        <ProgressSync />
       </body>
     </html>
   );

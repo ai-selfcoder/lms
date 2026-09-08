@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { SegmentedControl } from "@/ds";
 import { diskScheduler, type DiskPolicy } from "@/lib/os/sim/diskScheduler";
 
@@ -15,6 +15,7 @@ export interface DiskSchedulerProps {
   requests?: number[];
   policy?: DiskPolicy;
   compact?: boolean;
+  onStateChange?: (state: { start: number; requests: number[]; policy: DiskPolicy }) => void;
 }
 
 const POLICIES: { value: DiskPolicy; label: string }[] = [
@@ -30,6 +31,7 @@ export function DiskScheduler({
   requests = [98, 183, 37, 122, 14, 124, 65, 67],
   policy = "SSTF",
   compact = true,
+  onStateChange,
 }: DiskSchedulerProps) {
   const [head, setHead] = useState(start);
   const [reqText, setReqText] = useState(requests.join(" "));
@@ -40,6 +42,7 @@ export function DiskScheduler({
     [reqText]
   );
   const trace = useMemo(() => diskScheduler({ start: head, requests: reqs, policy: pol }), [head, reqs, pol]);
+  useEffect(() => onStateChange?.({ start: head, requests: reqs, policy: pol }), [head, reqs, pol, onStateChange]);
 
   return (
     <div style={shell(compact)}>

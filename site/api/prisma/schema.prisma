@@ -21,8 +21,55 @@ model User {
   level        String?
   createdAt    DateTime       @default(now())
   progress     TaskProgress[]
+  comments     TaskComment[]
+  solutionNotes TaskSolutionNote[]
+  verifiedPasses TaskPass[]
+  learningEvents LearningEvent[]
+  ownedTeams    Team[]       @relation("TeamOwner")
+  teamMemberships TeamMember[]
 
   @@unique([provider, providerId])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@index([userId, createdAt])
+}
+
+// Short, text-only takeaways from people who have passed a task. These are
+// separate from open questions so their publishing policy stays explicit.
+model TaskSolutionNote {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([taskId, createdAt])
+}
+
+// Created only by the server-side grading proxy after a grader PASS. Product
+// entitlements use this record, never optional analytics events from a client.
+model TaskPass {
+  id       String   @id @default(cuid())
+  userId   String
+  taskId   String
+  passedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@index([taskId, passedAt])
 }
 
 model TaskProgress {
@@ -36,4 +83,72 @@ model TaskProgress {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, taskId])
+}
+
+model LearningEvent {
+  id        String   @id
+  userId    String
+  type      String
+  itemId    String
+  courseId  String?
+  occurredAt DateTime
+  metaJson  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([itemId, occurredAt])
+}
+
+// A private workspace is deliberately a thin coordination layer: it stores a
+// team-owned sequence of task identifiers, never a learner's submitted code.
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  owner     User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members   TeamMember[]
+  tracks    TeamTrack[]
+
+  @@index([ownerId, createdAt])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId, createdAt])
+}
+
+model TeamTrack {
+  id          String          @id @default(cuid())
+  teamId      String
+  name        String
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  team        Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  items       TeamTrackItem[]
+
+  @@index([teamId, createdAt])
+}
+
+model TeamTrackItem {
+  id        String    @id @default(cuid())
+  trackId   String
+  taskId    String
+  position  Int
+  createdAt DateTime  @default(now())
+  track     TeamTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, taskId])
+  @@unique([trackId, position])
 }

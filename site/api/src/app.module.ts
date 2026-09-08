@@ -5,6 +5,10 @@ import { AuthModule } from './auth/auth.module';
 import { ProgressModule } from './progress/progress.module';
 import { MentorModule } from './mentor/mentor.module';
 import { AdminModule } from './admin/admin.module';
+import { DiscussionsModule } from './discussions/discussions.module';
+import { EventsModule } from './events/events.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
   imports: [
@@ -14,6 +18,10 @@ import { AdminModule } from './admin/admin.module';
     ProgressModule,
     MentorModule,
     AdminModule,
+    DiscussionsModule,
+    EventsModule,
+    LeaderboardModule,
+    TeamsModule,
   ],
 })
 export class AppModule {}

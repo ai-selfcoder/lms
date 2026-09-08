@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { lockContention, type LockThread } from "@/lib/os/sim/lockContention";
 
 /**
@@ -13,6 +13,7 @@ import { lockContention, type LockThread } from "@/lib/os/sim/lockContention";
 export interface LockContentionProps {
   threads?: LockThread[];
   compact?: boolean;
+  onStateChange?: (state: { threads: LockThread[] }) => void;
 }
 
 const COLORS = ["#5b9dff", "#46c79a", "#e8a13c", "#c77dff", "#ff7a85", "#4dd0e1"];
@@ -23,9 +24,10 @@ const DEFAULT: LockThread[] = [
   { name: "T3", arrival: 2, work: 3 },
 ];
 
-export function LockContention({ threads = DEFAULT, compact = true }: LockContentionProps) {
+export function LockContention({ threads = DEFAULT, compact = true, onStateChange }: LockContentionProps) {
   const [ts, setTs] = useState<LockThread[]>(threads);
   const trace = useMemo(() => lockContention(ts), [ts]);
+  useEffect(() => onStateChange?.({ threads: ts }), [ts, onStateChange]);
   const colorOf = (i: number) => COLORS[i % COLORS.length];
 
   const update = (i: number, patch: Partial<LockThread>) =>

@@ -6,6 +6,7 @@ import { Mdx } from "@/components/Mdx";
 import { parseBlocks } from "@/lib/os/blocks";
 import { SimRenderer } from "@/components/os/sim/SimRenderer";
 import { Quiz } from "@/components/os/Quiz";
+import { getCourse } from "@/lib/courses";
 
 const COURSE = "os";
 
@@ -42,6 +43,7 @@ export default async function OsChapterPage({
   const data = getBookChapter(slug, COURSE);
   if (!data) notFound();
   const { chapter, prev, next } = data;
+  const course = getCourse(COURSE);
 
   const all = getBookChapters(COURSE);
   const blocks = parseBlocks(chapter.body);
@@ -85,9 +87,12 @@ export default async function OsChapterPage({
 
       {/* chapter body */}
       <article style={{ flex: 1, minWidth: 0, maxWidth: 720 }}>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)", margin: "0 0 8px" }}>
-          ОС · {blockLabel(chapter.order)}{chapter.minutes ? ` · ${chapter.minutes} мин` : ""}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)", margin: 0 }}>
+            ОС · {blockLabel(chapter.order)}{chapter.minutes ? ` · ${chapter.minutes} мин` : ""}
+          </p>
+          {course?.version && <Link href={`/changelog#v${course.version}`} title={course.versionDate ? `Версия контента от ${course.versionDate}` : "История изменений контента"} style={{ marginLeft: "auto", color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", fontSize: 11, textDecoration: "none", whiteSpace: "nowrap" }}>Контент v{course.version}</Link>}
+        </div>
         <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", margin: "0 0 28px" }}>
           {chapter.title}
         </h1>
@@ -99,7 +104,7 @@ export default async function OsChapterPage({
             if (!sim) return null;
             return (
               <figure key={i} style={{ margin: "26px 0" }}>
-                <SimRenderer kind={sim.kind} defaults={sim.defaults} />
+                <SimRenderer kind={sim.kind} defaults={sim.defaults} simId={b.id} />
                 {sim.explain && (
                   <figcaption style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 10, lineHeight: 1.5 }}>
                     {sim.explain}

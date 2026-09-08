@@ -5,8 +5,9 @@ import type { TaskMeta } from "@/lib/content";
 
 /** Small "n/m решено" mono badge for a topic, driven by localStorage. */
 export function TopicProgress({ tasks }: { tasks: TaskMeta[] }) {
-  const { isSolved } = useProgress();
-  const done = tasks.filter((t) => isSolved(t.id)).length;
+  const courseId = tasks[0]?.courseId;
+  const { isSolved } = useProgress(undefined, courseId);
+  const done = tasks.filter((t) => isSolved(t.id, t.courseId)).length;
   const all = tasks.length > 0 && done === tasks.length;
 
   return (

@@ -29,6 +29,8 @@ type JobStatus struct {
 	Phase       JobPhase   `json:"status"`
 	Position    int        `json:"position"`
 	QueueLength int        `json:"queueLength"` // jobs still waiting (not yet picked up by a worker)
+	TaskID      string     `json:"taskId,omitempty"`
+	Course      string     `json:"course,omitempty"`
 	Result      *RunResult `json:"result,omitempty"`
 	Error       string     `json:"error,omitempty"`
 }
@@ -38,6 +40,8 @@ type job struct {
 	id      string
 	taskDir string
 	code    string
+	taskID  string
+	course  string
 	ticket  uint64 // 1-based enqueue order; assigned on successful enqueue
 
 	phase      JobPhase
@@ -96,6 +100,13 @@ func newJobID() string {
 // Submit enqueues a grade and returns its job id, or ErrQueueFull. taskDir must
 // already be validated/resolved by the caller.
 func (q *Queue) Submit(taskDir, userCode string) (string, error) {
+	return q.SubmitWithMeta(taskDir, userCode, "", "")
+}
+
+// SubmitWithMeta keeps the task identity with the opaque grade job. The
+// status endpoint can then safely report which task produced a PASS without
+// ever returning the submitted source code.
+func (q *Queue) SubmitWithMeta(taskDir, userCode, taskID, course string) (string, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 
@@ -108,6 +119,8 @@ func (q *Queue) Submit(taskDir, userCode string) (string, error) {
 		id:      newJobID(),
 		taskDir: taskDir,
 		code:    userCode,
+		taskID:  taskID,
+		course:  course,
 		phase:   PhaseQueued,
 	}
 	// Non-blocking send under the lock: the count guard guarantees room, and the
@@ -132,7 +145,7 @@ func (q *Queue) Status(jobID string) (JobStatus, bool) {
 	if !ok {
 		return JobStatus{}, false
 	}
-	st := JobStatus{Phase: j.phase, QueueLength: int(q.enqueued - q.started)}
+	st := JobStatus{Phase: j.phase, QueueLength: int(q.enqueued - q.started), TaskID: j.taskID, Course: j.course}
 	switch j.phase {
 	case PhaseQueued:
 		st.Position = int(j.ticket - q.started)

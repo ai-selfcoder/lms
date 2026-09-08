@@ -1,5 +1,7 @@
 import { SiteHeader } from "@/components/SiteHeader";
 import { Logo } from "@/ds";
+import { AnalyticsPreferences } from "@/components/Analytics";
+import Link from "next/link";
 
 /**
  * Standard page chrome: sticky course-aware header + footer around the content.
@@ -33,15 +35,13 @@ export function ChromeShell({ children }: { children: React.ReactNode }) {
           }}
         >
           <Logo size={20} color="var(--text-secondary)" mark="var(--text-tertiary)" />
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 12,
-              color: "var(--text-tertiary)",
-            }}
-          >
-            {"// интерактивные учебники для инженеров · Go · ОС"}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>
+              {"// интерактивные учебники для инженеров · Go · ОС"}
+            </span>
+            <Link href="/changelog" style={{ color: "var(--text-secondary)", fontSize: 12, textDecoration: "none" }}>История изменений ↗</Link>
+            <AnalyticsPreferences />
+          </div>
         </div>
       </footer>
     </div>

@@ -31,6 +31,13 @@ export interface TaskNeighbour {
   num: number;
 }
 
+export interface TaskLearningContext {
+  prerequisites: Array<{ id: string; title: string; href: string }>;
+  theory?: { title: string; href: string };
+  next?: { title: string; href: string };
+  similar?: { title: string; href: string };
+}
+
 export type TestStatus = "pass" | "fail" | "skip";
 
 export interface TestCaseResult {

@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { SegmentedControl, Button, Callout } from "@/ds";
+import { recordLearningEvent } from "@/lib/progress";
+import { DiscussionPanel } from "./DiscussionPanel";
+import { SolutionNotesPanel } from "./SolutionNotesPanel";
+import type { TaskLearningContext } from "./types";
 
-type TabKey = "problem" | "theory" | "solution";
+type TabKey = "problem" | "theory" | "editorial" | "solution" | "notes" | "discussion";
 
 const LOCKED_COPY =
   "Эталонный разбор откроется, когда тесты пройдут. Сначала попробуй сам.";
@@ -13,17 +17,23 @@ export function DescPanel({
   problemNode,
   theoryNode,
   solutionNode,
+  editorialNode,
   hasSolution,
   solved,
   hints,
+  discussionTaskId,
+  learningContext,
 }: {
   taskId: string;
   problemNode: ReactNode;
   theoryNode: ReactNode | null;
   solutionNode: ReactNode | null;
+  editorialNode: ReactNode | null;
   hasSolution: boolean;
   solved: boolean;
   hints: string[];
+  discussionTaskId: string;
+  learningContext?: TaskLearningContext;
 }) {
   const [activeKey, setActiveKey] = useState<TabKey>("problem");
   const [revealSolution, setRevealSolution] = useState(false);
@@ -34,12 +44,15 @@ export function DescPanel({
     { value: "problem", label: "Условие" },
   ];
   if (theoryNode) options.push({ value: "theory", label: "Теория" });
+  if (editorialNode) options.push({ value: "editorial", label: "Разбор" });
   if (hasSolution)
     options.push({
       value: "solution",
       label: "Решение",
       locked: !solutionUnlocked,
     });
+  options.push({ value: "notes", label: "Заметки", locked: !solved });
+  options.push({ value: "discussion", label: "Обсуждение" });
 
   // If the active tab is now hidden/locked, fall back to "Условие".
   const visibleValues = options.map((o) => o.value);
@@ -73,6 +86,7 @@ export function DescPanel({
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 18px" }}>
         {effectiveKey === "problem" && (
           <>
+            {learningContext && <LearningContext context={learningContext} solved={solved} />}
             <div className="mdx">{problemNode}</div>
             <Hints taskId={taskId} hints={hints} />
           </>
@@ -95,7 +109,54 @@ export function DescPanel({
           ) : (
             <SolutionLock onReveal={() => setRevealSolution(true)} />
           ))}
+
+        {effectiveKey === "editorial" &&
+          (editorialNode ? <div className="mdx">{editorialNode}</div> : <Empty>Редакторский разбор ещё готовится.</Empty>)}
+
+        {effectiveKey === "notes" && <SolutionNotesPanel taskId={discussionTaskId} solved={solved} />}
+
+        {effectiveKey === "discussion" && <DiscussionPanel taskId={discussionTaskId} />}
       </div>
+    </div>
+  );
+}
+
+function LearningContext({ context, solved }: { context: TaskLearningContext; solved: boolean }) {
+  const firstPrerequisite = context.prerequisites[context.prerequisites.length - 1];
+  return (
+    <section
+      aria-label="Связи обучения"
+      style={{
+        marginBottom: 22,
+        padding: "12px 13px",
+        border: "1px solid var(--border-default)",
+        borderRadius: 6,
+        background: "var(--bg-canvas)",
+      }}
+    >
+      {firstPrerequisite && (
+        <ContextRow label="ПЕРЕД ЭТИМ" href={firstPrerequisite.href} title={firstPrerequisite.title} />
+      )}
+      {context.theory && <ContextRow label="ТЕОРИЯ" href={context.theory.href} title={context.theory.title} />}
+      {context.next && (
+        <ContextRow
+          label={solved ? "СЛЕДУЮЩИЙ ШАГ" : "ПОСЛЕ PASS"}
+          href={context.next.href}
+          title={context.next.title}
+        />
+      )}
+      {solved && context.similar && (
+        <ContextRow label="ПОХОЖАЯ ЗАДАЧА" href={context.similar.href} title={context.similar.title} />
+      )}
+    </section>
+  );
+}
+
+function ContextRow({ label, href, title }: { label: string; href: string; title: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, padding: "3px 0" }}>
+      <span style={{ flexShrink: 0, color: "var(--text-tertiary)", font: "10px var(--font-mono)", letterSpacing: ".07em" }}>{label}</span>
+      <a href={href} style={{ minWidth: 0, overflow: "hidden", color: "var(--accent-text)", fontSize: 12, textAlign: "right", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: "none" }}>{title} →</a>
     </div>
   );
 }
@@ -140,6 +201,7 @@ function Hints({ taskId, hints }: { taskId: string; hints: string[] }) {
   const revealNext = useCallback(() => {
     setRevealed((prev) => {
       const next = Math.min(total, prev + 1);
+      recordLearningEvent("hint", taskId, { eventId: `hint:${taskId}:${next}`, meta: { index: next } });
       try {
         window.localStorage.setItem(storageKey, String(next));
       } catch {
@@ -147,7 +209,7 @@ function Hints({ taskId, hints }: { taskId: string; hints: string[] }) {
       }
       return next;
     });
-  }, [storageKey, total]);
+  }, [storageKey, taskId, total]);
 
   if (total === 0) return null;
 

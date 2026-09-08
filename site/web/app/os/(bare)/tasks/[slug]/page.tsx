@@ -9,6 +9,9 @@ import {
 import { Mdx } from "@/components/Mdx";
 import { TaskWorkspace } from "@/components/task/TaskWorkspace";
 import type { Difficulty, NavTask, NavTopic } from "@/components/task/types";
+import { getCourse } from "@/lib/courses";
+import { getTaskLearningContext } from "@/lib/learning";
+import type { TaskLearningContext } from "@/components/task/types";
 
 const COURSE = "os";
 
@@ -44,6 +47,8 @@ export default async function OsTaskPage({
   if (!task) notFound();
 
   const { prev, next } = getTaskNeighbours(slug, COURSE);
+  const course = getCourse(COURSE);
+  const learningContext: TaskLearningContext | undefined = getTaskLearningContext(`${COURSE}:task:${task.id}`) ?? undefined;
 
   const nav: NavTopic[] = getTopicGroups(COURSE).map((g) => ({
     num: g.num,
@@ -63,6 +68,7 @@ export default async function OsTaskPage({
   const problemNode = <Mdx source={task.problem} />;
   const theoryNode = task.theory ? <Mdx source={task.theory} /> : null;
   const solutionNode = task.solution ? <Mdx source={task.solution} /> : null;
+  const editorialNode = task.editorial ? <Mdx source={task.editorial} /> : null;
 
   const referenceNode =
     !solutionNode && task.reference ? (
@@ -90,8 +96,12 @@ export default async function OsTaskPage({
       problemNode={problemNode}
       theoryNode={theoryNode}
       solutionNode={solutionNode ?? referenceNode}
+      editorialNode={editorialNode}
       hasSolution={Boolean(solutionNode || referenceNode)}
       hints={task.hints}
+      contentVersion={course?.version}
+      contentVersionDate={course?.versionDate}
+      learningContext={learningContext}
     />
   );
 }

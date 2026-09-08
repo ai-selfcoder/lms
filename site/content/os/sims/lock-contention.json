@@ -2,6 +2,7 @@
   "id": "lock-contention",
   "kind": "lock-contention",
   "title": "Борьба потоков за лок",
+  "chapterSlug": "locks-hardware",
   "explain": "Несколько потоков хотят один лок. Сплошные блоки — работа в критической секции, блёклые — потерянное время ожидания. Чем больше потоков и длиннее крит. секция, тем дороже contention.",
   "defaults": {
     "threads": [

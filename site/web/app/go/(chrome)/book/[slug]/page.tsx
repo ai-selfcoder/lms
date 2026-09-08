@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBookChapter, getBookChapters } from "@/lib/content";
+import { getBookChapter, getBookChapters, getAllTaskMeta } from "@/lib/content";
 import { Mdx } from "@/components/Mdx";
 import { extractToc } from "@/lib/toc";
 import { BookChapterView } from "@/components/book/BookChapterView";
+import { getCourse } from "@/lib/courses";
+
+const COURSE = "go";
 
 export function generateStaticParams() {
   return getBookChapters().map((c) => ({ slug: c.slug }));
@@ -39,6 +42,9 @@ export default async function BookChapterPage({
     title: c.title,
     index: i + 1,
   }));
+  const related = getAllTaskMeta().find((task) => task.num === chapter.order) ?? getAllTaskMeta()[chapter.order - 1];
+
+  const course = getCourse(COURSE);
 
   return (
     <BookChapterView
@@ -50,6 +56,9 @@ export default async function BookChapterPage({
       chapters={all}
       prev={prev ? { slug: prev.slug, title: prev.title } : null}
       next={next ? { slug: next.slug, title: next.title } : null}
+      relatedPractice={related ? { href: `/go/tasks/${related.slug}`, title: `${String(related.num).padStart(2, "0")}. ${related.title}` } : null}
+      version={course?.version}
+      versionDate={course?.versionDate}
     >
       <Mdx source={chapter.body} />
     </BookChapterView>

@@ -2,6 +2,7 @@
   "id": "translate-base-bound",
   "kind": "address-translation",
   "title": "base-and-bounds",
+  "chapterSlug": "address-translation",
   "explain": "Подвигай виртуальный адрес ползунком. Железо прибавляет base и проверяет bound: вышел за границу — segfault.",
   "defaults": {
     "mode": "base-bound",

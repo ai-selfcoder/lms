@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { SegmentedControl } from "@/ds";
 import {
   pageReplacement,
@@ -18,6 +18,7 @@ export interface PageReplacementProps {
   initialCapacity?: number;
   initialPolicy?: ReplPolicy;
   compact?: boolean;
+  onStateChange?: (state: { refs: number[]; capacity: number; policy: ReplPolicy }) => void;
 }
 
 const HIT = "#46c79a";
@@ -35,6 +36,7 @@ export function PageReplacement({
   initialCapacity = 3,
   initialPolicy = "LRU",
   compact = true,
+  onStateChange,
 }: PageReplacementProps) {
   const [refsText, setRefsText] = useState(initialRefs.join(" "));
   const [capacity, setCapacity] = useState(initialCapacity);
@@ -48,6 +50,7 @@ export function PageReplacement({
     () => pageReplacement({ refs, capacity, policy }),
     [refs, capacity, policy]
   );
+  useEffect(() => onStateChange?.({ refs, capacity, policy }), [refs, capacity, policy, onStateChange]);
 
   return (
     <div style={shell(compact)}>

@@ -6,6 +6,7 @@ import { Button, Terminal, Kbd, Badge, SegmentedControl, type TerminalStatus } f
 import type { RunResult, TestCaseResult } from "./types";
 import { MentorPanel } from "./MentorPanel";
 import { QueueStatus } from "./QueueStatus";
+import { compareTaskAttempts, type TaskAttempt } from "@/lib/progress";
 
 const PlayIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -247,6 +248,8 @@ export function EditorPanel({
   taskTitle,
   taskType,
   queue,
+  attempts = [],
+  onRestoreCode,
 }: {
   code: string;
   onChange: (value: string) => void;
@@ -258,6 +261,8 @@ export function EditorPanel({
   taskTitle?: string;
   taskType?: string;
   queue?: { position: number; queueLength: number } | null;
+  attempts?: TaskAttempt[];
+  onRestoreCode?: (code: string) => void;
 }) {
   const runRef = useRef(onRun);
   runRef.current = onRun;
@@ -567,6 +572,10 @@ export function EditorPanel({
         </div>
       )}
 
+      {attempts.length > 0 && onRestoreCode && (
+        <AttemptHistory attempts={attempts} onRestoreCode={onRestoreCode} />
+      )}
+
       {/* AI mentor — visually subordinate to the test results. Self-hides
           when the backend has no Anthropic key configured. */}
       <MentorPanel
@@ -577,5 +586,61 @@ export function EditorPanel({
         testOutput={!running && result ? result.output : undefined}
       />
     </div>
+  );
+}
+
+function AttemptHistory({ attempts, onRestoreCode }: { attempts: TaskAttempt[]; onRestoreCode: (code: string) => void }) {
+  const [selectedId, setSelectedId] = useState(attempts[0]?.id ?? "");
+  const selected = attempts.find((attempt) => attempt.id === selectedId) ?? attempts[0];
+  useEffect(() => {
+    if (!attempts.some((attempt) => attempt.id === selectedId)) setSelectedId(attempts[0]?.id ?? "");
+  }, [attempts, selectedId]);
+  if (!selected) return null;
+  const visible = attempts.slice(0, 12);
+  const comparison = compareTaskAttempts(attempts);
+  const formatDelta = (ms: number) => `${ms >= 0 ? "+" : ""}${(ms / 1000).toFixed(2)}s`;
+  return (
+    <section style={{ flexShrink: 0, borderTop: "1px solid var(--border-default)", background: "var(--bg-surface)", padding: "10px 14px 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span style={{ font: "11px var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)" }}>История попыток</span>
+        <span style={{ font: "11px var(--font-mono)", color: "var(--text-disabled)" }}>{attempts.length}</span>
+      </div>
+      <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+        {visible.map((attempt, index) => (
+          <button key={attempt.id} type="button" onClick={() => setSelectedId(attempt.id)} style={{ flex: "0 0 auto", height: 28, padding: "0 8px", border: `1px solid ${selected.id === attempt.id ? "var(--accent)" : "var(--border-default)"}`, borderRadius: 4, background: selected.id === attempt.id ? "var(--bg-canvas)" : "transparent", color: attempt.passed ? "var(--success)" : "var(--danger)", font: "11px var(--font-mono)", cursor: "pointer" }}>
+            {attempts.length - index}{attempt.passed ? " PASS" : " FAIL"}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 7, color: "var(--text-tertiary)", font: "11px var(--font-mono)" }}>
+        <span>{new Date(selected.at).toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })}</span>
+        {selected.summary && <span>{selected.summary}</span>}
+        <button type="button" onClick={() => onRestoreCode(selected.code)} style={{ marginLeft: "auto", height: 27, padding: "0 9px", border: "1px solid var(--border-default)", borderRadius: 4, background: "transparent", color: "var(--text-secondary)", font: "11px var(--font-mono)", cursor: "pointer" }}>Восстановить код</button>
+      </div>
+      <pre style={{ maxHeight: 132, overflow: "auto", margin: "8px 0 0", padding: "8px 10px", border: "1px solid var(--border-subtle)", borderRadius: 4, background: "var(--bg-terminal)", color: "var(--text-secondary)", font: "11px/1.45 var(--font-mono)", whiteSpace: "pre-wrap" }}>{selected.code}</pre>
+      {comparison && (
+        <div style={{ marginTop: 10, borderTop: "1px solid var(--border-subtle)", paddingTop: 9 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ font: "11px var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)" }}>Первая → первая успешная</span>
+            <span style={{ font: "11px var(--font-mono)", color: "var(--text-secondary)" }}>{comparison.attemptsBeforeSuccess} попыток · {comparison.changedLines} изменённых строк · время {formatDelta(comparison.durationDeltaMs)}</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            <button type="button" onClick={() => setSelectedId(comparison.first.id)} style={{ height: 26, padding: "0 8px", border: `1px solid ${selected.id === comparison.first.id ? "var(--accent)" : "var(--border-default)"}`, borderRadius: 4, background: "transparent", color: "var(--text-secondary)", font: "11px var(--font-mono)", cursor: "pointer" }}>Первая</button>
+            <button type="button" onClick={() => setSelectedId(comparison.successful.id)} style={{ height: 26, padding: "0 8px", border: `1px solid ${selected.id === comparison.successful.id ? "var(--accent)" : "var(--border-default)"}`, borderRadius: 4, background: "transparent", color: "var(--text-secondary)", font: "11px var(--font-mono)", cursor: "pointer" }}>Успешная</button>
+          </div>
+          <p style={{ margin: "6px 0 7px", color: "var(--text-tertiary)", fontSize: 11, lineHeight: 1.45 }}>
+            Сравнение показывает только наблюдаемые изменения между версиями. Увеличение числа строк не означает улучшение, а длительность отражает только время проверки.
+          </p>
+          <div style={{ maxHeight: 150, overflow: "auto", border: "1px solid var(--border-subtle)", borderRadius: 4, background: "var(--bg-terminal)", font: "11px/1.45 var(--font-mono)" }}>
+            {comparison.diff.map((line, index) => (
+              <div key={`${line.kind}-${index}`} style={{ display: "flex", gap: 8, padding: "2px 8px", color: line.kind === "added" ? "var(--success)" : line.kind === "removed" ? "var(--danger)" : "var(--text-tertiary)", background: line.kind === "added" ? "rgba(34,197,94,0.07)" : line.kind === "removed" ? "rgba(239,68,68,0.07)" : "transparent" }}>
+                <span style={{ width: 10, flexShrink: 0 }}>{line.kind === "added" ? "+" : line.kind === "removed" ? "-" : " "}</span>
+                <span style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{line.text || " "}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

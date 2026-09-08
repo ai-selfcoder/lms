@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState } from "react";
+import { useEffect } from "react";
+import { recordLearningEvent } from "@/lib/progress";
 import { RunnableMounter } from "@/components/play/RunnableMounter";
 
 interface TocItem {
@@ -21,6 +23,7 @@ interface ChapterRef {
   title: string;
   index: number;
 }
+interface PracticeRef { href: string; title: string }
 
 export function BookChapterView({
   slug,
@@ -34,6 +37,9 @@ export function BookChapterView({
   children,
   basePath = "/go/book",
   sectionLabel = "Основы",
+  relatedPractice,
+  version,
+  versionDate,
 }: {
   slug: string;
   title: string;
@@ -48,8 +54,15 @@ export function BookChapterView({
   basePath?: string;
   /** Label shown in the side-nav header and chapter meta line. */
   sectionLabel?: string;
+  relatedPractice?: PracticeRef | null;
+  version?: string;
+  versionDate?: string;
 }) {
   const order2 = String(order).padStart(2, "0");
+  const courseId = basePath.split("/")[1] || "go";
+  useEffect(() => {
+    recordLearningEvent("started", `${courseId}:chapter:${slug}`, { courseId, eventId: `started:${courseId}:chapter:${slug}` });
+  }, [courseId, slug]);
 
   return (
     <div
@@ -122,6 +135,22 @@ export function BookChapterView({
               </span>
             </>
           ) : null}
+          {version ? (
+            <Link
+              href={`/changelog#v${version}`}
+              style={{
+                marginLeft: "auto",
+                color: "var(--text-tertiary)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--label-xs)",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+              title={versionDate ? `Версия контента от ${versionDate}` : "История изменений контента"}
+            >
+              Контент v{version}
+            </Link>
+          ) : null}
         </div>
         <h1
           style={{
@@ -139,6 +168,7 @@ export function BookChapterView({
 
         <div className="mdx">{children}</div>
         <RunnableMounter />
+        {relatedPractice && <Link href={relatedPractice.href} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginTop: 28, padding: "14px 16px", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", background: "var(--accent-subtle)", color: "var(--text-primary)", textDecoration: "none" }}><span><span style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--accent-text)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4 }}>Практика после главы</span><strong style={{ fontSize: 14 }}>{relatedPractice.title}</strong></span><span aria-hidden="true" style={{ color: "var(--accent-text)", fontSize: 18 }}>→</span></Link>}
 
         {/* prev/next */}
         <nav

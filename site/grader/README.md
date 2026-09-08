@@ -4,12 +4,13 @@ HTTP grading service for the Go concurrency trainer. It accepts a submission,
 assembles a multi-file Go module (user code + the task's hidden test), runs
 `go test -race`, and returns a verdict.
 
-Two execution backends behind one `Runner` interface, selected by `RUNNER`:
+Execution backends sit behind one `Runner` interface, selected by `RUNNER`:
 
 | RUNNER   | Backend                              | Use            | Sandboxed |
 |----------|--------------------------------------|----------------|-----------|
 | `local`  | `go test -race` on the host          | dev only       | **No**    |
-| `judge0` | self-hosted Judge0 multi-file lang   | production     | **Yes**   |
+| `piston` | external self-hosted Piston + `gotest` | **production** (`site/deploy`) | **Yes** |
+| `judge0` | self-hosted Judge0 multi-file lang   | legacy `site/infra` stack      | **Yes** |
 
 ## API
 
@@ -27,9 +28,9 @@ Response (always HTTP 200 on a graded submission, even on failure):
 ```
 
 Verdict mapping:
-- exit 0 / Judge0 `Accepted` → `pass: true`
+- exit 0 / sandbox `Accepted` → `pass: true`
 - build failure → `compileError: true`, `pass: false`
-- test timeout / Judge0 wall-time exceeded → `timedOut: true`, `pass: false`
+- sandbox wall-time exceeded → `timedOut: true`, `pass: false`
 - otherwise (test failed, runtime panic) → `pass: false`
 
 Error responses (HTTP 4xx/5xx) carry `{"error": "..."}` and are for malformed
@@ -68,10 +69,12 @@ jq -nc --arg code "$(cat starter.go)" '{taskId:"09", code:$code}' \
   | jq '{pass, compileError, timedOut, durationMs}'
 ```
 
-## Run the full stack (prod-like, sandboxed)
+## Run the legacy Judge0 stack (prod-like, sandboxed)
 
 This brings up Judge0 (server + workers), Postgres, Redis, and the grader in
 `judge0` mode. The grader's `Judge0Runner` cannot be tested without this stack.
+For the current production deployment use `site/deploy/docker-compose.yml`,
+which runs the grader in `piston` mode and points it at an external Piston host.
 
 ```sh
 cd site
@@ -105,7 +108,7 @@ docker compose -f infra/docker-compose.yml --profile web up -d --build
 
 | Var                       | Default              | Description                                            |
 |---------------------------|----------------------|--------------------------------------------------------|
-| `RUNNER`                  | `local`              | `local` or `judge0`                                    |
+| `RUNNER`                  | `local`              | `local`, `piston`, or `judge0`                          |
 | `PORT`                    | `8080`               | HTTP listen port                                       |
 | `CONTENT_DIR`             | `../content/tasks`   | Path to `content/tasks` (resolved to absolute)         |
 | `MAX_CODE_BYTES`          | `65536`              | Reject submissions larger than this (64 KiB)           |
@@ -115,12 +118,15 @@ docker compose -f infra/docker-compose.yml --profile web up -d --build
 | `JUDGE0_URL`              | —                    | Judge0 base URL (required when `RUNNER=judge0`)         |
 | `JUDGE0_LANGUAGE_ID`      | `89`                 | Multi-file language id (override if install differs)   |
 | `JUDGE0_AUTH_TOKEN`       | —                    | `X-Auth-Token` if Judge0 has `AUTHN_TOKEN` set         |
+| `PISTON_URL`              | —                    | Piston base URL (required when `RUNNER=piston`)         |
+| `PISTON_LANGUAGE`         | `gotest`             | Piston package name                                    |
+| `PISTON_VERSION`         | `1.26.4`             | Piston package version                                 |
 
 ## Security model
 
-- **Untrusted code runs only in Judge0** (`RUNNER=judge0`): isolated via
-  cgroups/seccomp (`isolate`), with **no network** (`enable_network:false`,
-  enforced and not re-enableable by submissions) and CPU/wall/memory caps.
+- **Untrusted code runs only in a sandboxed backend**: Piston for the current
+  deployment (`RUNNER=piston`) or Judge0 for the legacy stack
+  (`RUNNER=judge0`). Both enforce isolation and CPU/wall/memory caps.
 - `RUNNER=local` has **no isolation** — it is a developer convenience and must
   never face untrusted input.
 - Hidden grader files (`solution_test.go`, `support.go`) and reference solutions
@@ -142,7 +148,8 @@ grader/
   ratelimit.go      # per-IP fixed-window limiter
   runner.go         # Runner interface + shared contract types
   local_runner.go   # LocalRunner (dev: go test on host)
-  judge0_runner.go  # Judge0Runner (prod: sandboxed multi-file submission)
+  piston_runner.go  # PistonRunner (current prod: sandboxed gotest submission)
+  judge0_runner.go  # Judge0Runner (legacy prod: sandboxed multi-file submission)
   verdict.go        # compile-error detection shared by both runners
   Dockerfile        # static binary on distroless
 ```

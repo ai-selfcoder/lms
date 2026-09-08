@@ -2,6 +2,7 @@
   "id": "translate-multilevel",
   "kind": "address-translation",
   "title": "Многоуровневая таблица",
+  "chapterSlug": "smaller-tables",
   "explain": "Адрес делится на L1|L2|offset. Внешний каталог указывает на подтаблицы; если запись каталога пуста — подтаблица вообще не выделена (так экономится память). За это платим вторым обращением в память.",
   "defaults": {
     "mode": "multi-level",

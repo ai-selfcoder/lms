@@ -43,6 +43,7 @@ export interface CpuSchedulerProps {
   initialQuantum?: number;
   /** Compact embed (inside a chapter) vs. full sandbox. */
   compact?: boolean;
+  onStateChange?: (state: { jobs: Job[]; policy: Policy; quantum: number }) => void;
 }
 
 const DEFAULT_JOBS: Job[] = [
@@ -56,10 +57,12 @@ export function CpuScheduler({
   initialPolicy = "FIFO",
   initialQuantum = 2,
   compact = false,
+  onStateChange,
 }: CpuSchedulerProps) {
   const [jobs, setJobs] = useState<Job[]>(initialJobs ?? DEFAULT_JOBS);
   const [policy, setPolicy] = useState<Policy>(initialPolicy);
   const [quantum, setQuantum] = useState<number>(initialQuantum);
+  useEffect(() => onStateChange?.({ jobs, policy, quantum }), [jobs, policy, quantum, onStateChange]);
 
   const params: SchedulerParams = useMemo(
     () => ({ policy, jobs, quantum }),

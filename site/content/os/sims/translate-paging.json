@@ -2,6 +2,7 @@
   "id": "translate-paging",
   "kind": "address-translation",
   "title": "Страничная трансляция",
+  "chapterSlug": "paging",
   "explain": "Виртуальный адрес делится на VPN и offset. VPN индексирует таблицу страниц → номер кадра; offset не меняется. Подвигай va и смотри разбор по битам.",
   "defaults": {
     "mode": "paging",

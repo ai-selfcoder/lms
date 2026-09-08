@@ -55,6 +55,8 @@ function exists(file: string): boolean {
 // ---------------------------------------------------------------------------
 
 export interface TaskMeta {
+  /** Owning course; task ids are only unique within this scope. */
+  courseId: string;
   id: string;
   num: number;
   topic: string;
@@ -72,6 +74,7 @@ export interface TaskContent extends TaskMeta {
   theoryMeta: Record<string, unknown> | null;
   solution: string | null; // solution.mdx raw (frontmatter stripped)
   solutionMeta: Record<string, unknown> | null;
+  editorial: string | null; // editor-authored failure-mode note (editorial.mdx)
   reference: string | null; // reference.go (QA only — also shown after solve)
   hints: string[]; // up to 3 progressive hints (empty when none)
 }
@@ -104,6 +107,8 @@ export interface SimManifest {
   kind: string;
   title: string;
   explain?: string;
+  /** Chapter that introduces the concept before this experiment. */
+  chapterSlug?: string;
   defaults?: Record<string, unknown>;
 }
 
@@ -169,6 +174,7 @@ function readMeta(id: string, courseId: string): TaskMeta | null {
   const title = parsed.title ?? `Задача ${num}`;
   const slug = parsed.slug && parsed.slug.length > 0 ? parsed.slug : slugify(title) || id;
   return {
+    courseId,
     id: parsed.id ?? id,
     num,
     topic: parsed.topic ?? "Без топика",
@@ -251,6 +257,9 @@ export function getTaskContent(
   const solutionRaw = safeRead(path.join(dir, "solution.mdx"));
   const solutionParsed = solutionRaw ? matter(solutionRaw) : null;
 
+  const editorialRaw = safeRead(path.join(dir, "editorial.mdx"));
+  const editorial = editorialRaw ? matter(editorialRaw).content : null;
+
   const reference = safeRead(path.join(dir, "reference.go"));
 
   const hints = readHints(dir);
@@ -265,6 +274,7 @@ export function getTaskContent(
     solutionMeta: solutionParsed
       ? (solutionParsed.data as Record<string, unknown>)
       : null,
+    editorial,
     reference,
     hints,
   };

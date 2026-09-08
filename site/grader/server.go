@@ -109,7 +109,7 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobID, err := s.queue.Submit(taskDir, req.Code)
+	jobID, err := s.queue.SubmitWithMeta(taskDir, req.Code, req.TaskID, req.Course)
 	if err != nil {
 		if errors.Is(err, ErrQueueFull) {
 			writeError(w, http.StatusTooManyRequests, "очередь переполнена, попробуй через минуту")

@@ -1,13 +1,14 @@
-# GoConcurrency — web (учебник + тренажёр)
+# GraphLMS — web
 
-Next.js (App Router) приложение: веб-учебник и интерактивный тренажёр по
-конкурентности Go. 32 задачи, теория к каждой, сквозные главы-учебника и
-песочница, которая прогоняет решения через `go test -race` во внешнем грейдере.
+Next.js (App Router) приложение GraphLMS: единый маршрут через основы Go,
+конкурентность Go и операционные системы. Здесь связаны главы, задачи,
+симуляторы, проектные треки, skill report и режим интервью. Решения проходят
+через `go test -race` во внешнем грейдере.
 
 ## Стек
 
 - **Next.js 15** (App Router, RSC) + **TypeScript** (strict)
-- **Tailwind CSS** — тёмная тема в палитре GitHub-dark
+- **локальный design system + CSS** — плотный адаптивный инженерный UI
 - **@monaco-editor/react** — редактор кода
 - **unified / remark / rehype** + **rehype-pretty-code (shiki)** — рендер
   Markdown-контента с подсветкой синтаксиса
@@ -21,20 +22,22 @@ Next.js (App Router) приложение: веб-учебник и интера
 
 ```
 app/
-  (site)/                 # маркетинговые/контентные страницы (общий хедер)
-    page.tsx              # /            — лендинг
-    book/                 # /book, /book/[slug]
-    topics/               # /topics, /topics/[n]
-  tasks/[slug]/page.tsx   # /tasks/[slug] — полноэкранный тренажёр
+  (site)/                 # общий shell и продуктовые страницы
+    page.tsx              # / — onboarding и next-best-action
+    account/              # кабинет и shareable skill report
+    projects/, teams/     # проектные треки и командные пространства
+  go/, go-basics/, os/    # три course-scoped маршрута
   api/run/route.ts        # POST /api/run — прокси к грейдеру
   sitemap.ts, robots.ts
 components/
-  task/                   # TaskWorkspace, TaskNav, EditorPanel, DescPanel
-  Mdx.tsx, TaskCard.tsx, SiteHeader.tsx, ...
+  task/                   # workspace, mentor, discussions, solution notes
+  projects/, teams/, ...  # продуктовые поверхности
 lib/
-  content.ts              # загрузчик контента (fs, gray-matter)
+  content.ts              # загрузчик course-scoped контента
+  learning.ts             # канонический LearningItem graph
   markdown.ts             # Markdown -> HTML (remark/rehype/shiki)
-  progress.ts             # прогресс в localStorage (solved + last code)
+  progress.ts             # local progress, attempts, events и merge
+  projectTracks.ts        # декларативные вертикальные треки
   toc.ts                  # оглавление главы
 ```
 
@@ -42,12 +45,12 @@ lib/
 
 | Route             | Описание                                            |
 | ----------------- | --------------------------------------------------- |
-| `/`               | Лендинг: питч, что внутри, прогресс, CTA             |
-| `/book`           | Оглавление глав учебника                             |
-| `/book/[slug]`    | Глава (MDX, TOC, prev/next)                          |
-| `/topics`         | 7 топиков с задачами и статусом решения              |
-| `/topics/[n]`     | Вводная глава топика + карточки задач                |
-| `/tasks/[slug]`   | Тренажёр: nav · Monaco + терминал · вкладки справа   |
+| `/`               | Onboarding, диагностика и следующий лучший шаг      |
+| `/go-basics/...`, `/go/...`, `/os/...` | Course-scoped книги, задачи и OS-лаборатории |
+| `/go/practice`    | Поиск, фильтры и статусы практики                    |
+| `/go/skills`, `/go/interview` | Skill graph и режим интервью               |
+| `/projects`, `/teams` | Проектные треки и командные пространства          |
+| `/account/report` | Shareable отчёт без исходного кода                  |
 | `/api/run`        | POST → прокси к грейдеру (server-only)               |
 | `/sitemap.xml`, `/robots.txt` | SEO                                     |
 
@@ -93,6 +96,8 @@ npm start
 | Переменная   | Назначение                                | Дефолт                  |
 | ------------ | ----------------------------------------- | ----------------------- |
 | `GRADER_URL` | URL Go-грейдера (server-only)             | `http://localhost:8090` |
+| `API_URL` | Внутренний URL NestJS API для server routes | `http://localhost:4000` |
+| `GRADER_SYNC_SECRET` | Общий с API секрет для short-lived PASS proof | — |
 | `SITE_URL`   | Базовый URL для sitemap/robots (опц.)     | `https://goconcurrency.local` |
 
 Секреты не коммитятся: только `.env.example`. Браузер никогда не обращается к
@@ -112,13 +117,17 @@ POST {GRADER_URL}/api/run
 
 ## Прогресс
 
-Хранится в `localStorage`:
+Локально в браузере хранятся:
 
-- `goconc.solved.v1` — множество id решённых задач
-- `goconc.code.v1.<id>` — последний код по каждой задаче
+- `goconc.solved.v1` — course-scoped множество решённых задач
+- `goconc.code.v1.<course>:<id>` — последний код и черновик
+- `goconc.attempts.v1` — история попыток для сравнения первой и успешной
+- `goconc.events.v1` — обезличенные learning events с opt-out
 
-Решённой задача становится автоматически при вердикте PASS. Вкладка «Решение»
-до этого заблокирована (есть escape «Показать всё равно»).
+После входа прогресс объединяется с сервером idempotent sync. Во время активной
+сессии черновики и pass отправляются с debounce; при конфликте локальный код
+сохраняется, а solved-статусы объединяются. При недоступном API приложение
+остаётся полностью работоспособным локально.
 
 ## Деградация при неполном контенте
 

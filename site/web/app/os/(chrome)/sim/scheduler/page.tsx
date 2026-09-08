@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CpuScheduler } from "@/components/os/sim/CpuScheduler";
+import { SimRenderer } from "@/components/os/sim/SimRenderer";
+import { getSim } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Симулятор планировщика CPU",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function SchedulerSandboxPage() {
+  const sim = getSim("rr", "os");
   return (
     <div style={{ maxWidth: 880, margin: "0 auto", padding: "48px 28px" }}>
       <p
@@ -45,7 +47,7 @@ export default function SchedulerSandboxPage() {
         «Играть», чтобы прокрутить время.
       </p>
 
-      <CpuScheduler />
+      <SimRenderer kind={sim?.kind ?? "cpu-scheduler"} defaults={sim?.defaults} simId="rr" urlState />
     </div>
   );
 }

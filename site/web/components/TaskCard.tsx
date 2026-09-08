@@ -58,14 +58,14 @@ export function DifficultyTag({ difficulty }: { difficulty?: string }) {
 }
 
 export function TaskCard({ task }: { task: TaskMeta }) {
-  const { isSolved } = useProgress();
-  const solved = isSolved(task.id);
+  const { isSolved } = useProgress(undefined, task.courseId);
+  const solved = isSolved(task.id, task.courseId);
   const tone = diffTone(task.difficulty);
   const [hover, setHover] = useState(false);
 
   return (
     <Link
-      href={`/go/tasks/${task.slug}`}
+      href={`/${task.courseId}/tasks/${task.slug}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{

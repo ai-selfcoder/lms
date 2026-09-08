@@ -2,6 +2,7 @@
   "id": "translate-tlb",
   "kind": "address-translation",
   "title": "TLB: кэш трансляций",
+  "chapterSlug": "tlb",
   "explain": "В TLB закэшированы несколько VPN. Подвигай адрес: если его страница в TLB — это hit (таблицу не читаем, быстро); иначе miss — идём в таблицу и кладём перевод в TLB.",
   "defaults": {
     "mode": "paging",

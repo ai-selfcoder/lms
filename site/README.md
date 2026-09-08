@@ -11,8 +11,9 @@
 ```
 site/
   web/       Next.js 15 (App Router, TS, Tailwind) — сайт/учебник/тренажёр
-  grader/    Go-сервис: POST /api/run → go test -race (local | judge0)
-  infra/     docker-compose: Judge0 (песочница) + postgres + redis + grader
+  grader/    Go-сервис: POST /api/run → go test -race (local | piston | judge0)
+  deploy/    production docker-compose: web + api + grader + external Piston
+  infra/     legacy docker-compose: Judge0 (песочница) + postgres + redis
   content/   единый источник: задачи (32), главы (10), топики (7)
 ```
 
@@ -36,23 +37,26 @@ npm run dev            # http://localhost:3000   (.env.local уже указыв
 Открой **http://localhost:3000**. Прогресс хранится в localStorage браузера.
 
 > ⚠️ `RUNNER=local` исполняет код **без изоляции** — только для локальной разработки.
-> Для публичного прода используй Judge0 (ниже).
+> Для публичного прода используй изолированный Piston (ниже).
 
-## Прод (изолированная песочница Judge0)
+## Прод (изолированная песочница Piston)
 
 ```bash
 cd site
-docker compose -f infra/docker-compose.yml up -d --build
-# проверить, что поднялся мультифайловый язык Go:
-curl -s localhost:2358/languages | jq '.[] | select(.name|test("Multi-file"))'
-curl -s localhost:8090/healthz
+cp deploy/.env.example deploy/.env  # заполнить секреты и PISTON_URL
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+curl -s localhost:3000/
 ```
-Грейдер в этом режиме идёт с `RUNNER=judge0` и шлёт посылки в Judge0 (без сети,
-лимиты CPU/RAM/время). Эталоны (`reference.go`) в песочницу не попадают. Детали и
-переменные окружения — в [`grader/README.md`](./grader/README.md).
+Грейдер в этом режиме идёт с `RUNNER=piston` и шлёт посылки во внешний Piston
+(без сети, лимиты CPU/RAM/время). Эталоны (`reference.go`) в песочницу не
+попадают. Детали и переменные окружения — в [`deploy/README.md`](./deploy/README.md).
 
-Деплой фронта — Vercel (см. [`web/README.md`](./web/README.md); `content/` лежит
-выше `web/`, поэтому корнем проекта берётся `site/`).
+Для legacy-стека с self-hosted Judge0 остаётся `infra/docker-compose.yml`;
+его описание — в [`grader/README.md`](./grader/README.md).
+
+Production deployment — Coolify/Docker Compose (см. [`deploy/README.md`](./deploy/README.md)).
+Для отдельного Vercel-деплоя web-корнем проекта остаётся `site/`, поскольку
+`content/` лежит выше `web/`.
 
 ## Контент
 

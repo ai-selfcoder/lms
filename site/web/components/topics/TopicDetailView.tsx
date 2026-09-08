@@ -170,8 +170,9 @@ export function TopicDetailView({
 }
 
 function TopicProgressHeader({ tasks }: { tasks: TaskMeta[] }) {
-  const { isSolved } = useProgress();
-  const done = tasks.filter((t) => isSolved(t.id)).length;
+  const courseId = tasks[0]?.courseId;
+  const { isSolved } = useProgress(tasks.length, courseId);
+  const done = tasks.filter((t) => isSolved(t.id, t.courseId)).length;
   const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
   const tone = done > 0 && done === tasks.length ? "success" : "accent";
   const labelColor = tone === "success" ? "var(--success-fg)" : "var(--accent-text)";

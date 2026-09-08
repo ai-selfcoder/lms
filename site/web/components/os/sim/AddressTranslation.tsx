@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { SegmentedControl } from "@/ds";
 import {
   translate,
@@ -28,6 +28,7 @@ export interface AddressTranslationProps {
   multi?: (number[] | null)[];
   initialVa?: number;
   compact?: boolean;
+  onStateChange?: (state: { mode: AddrMode; va: number }) => void;
 }
 
 const VPN_COLOR = "#5b9dff";
@@ -46,10 +47,12 @@ export function AddressTranslation({
   multi = [[3, -1, 5, -1], null, [0, 1, -1, 2], null],
   initialVa = 35,
   compact = true,
+  onStateChange,
 }: AddressTranslationProps) {
   const [mode, setMode] = useState<AddrMode>(initialMode);
   const maxVa = (1 << vaBits) - 1;
   const [va, setVa] = useState<number>(Math.min(initialVa, maxVa));
+  useEffect(() => onStateChange?.({ mode, va }), [mode, va, onStateChange]);
 
   const params: AddrParams = useMemo(
     () => ({ mode, vaBits, pageBits, base, bound, table, tlb, levelBits, multi, va }),

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Button, Badge, Callout } from "@/ds";
+import { apiRequest, AuthError, useAuth } from "@/lib/auth";
 
 type Severity = "critical" | "major" | "minor" | "info";
 type Category =
@@ -15,6 +17,7 @@ type Category =
 
 interface Finding {
   title: string;
+  lineNumber: number;
   severity: Severity;
   category: Category;
   explanation: string;
@@ -149,12 +152,12 @@ export function MentorPanel({
   const [loading, setLoading] = useState(false);
   const [review, setReview] = useState<Review | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     let alive = true;
-    fetch("/api/mentor/status", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d: { configured?: boolean }) => {
+    apiRequest<{ configured?: boolean }>("/mentor/status")
+      .then((d) => {
         if (alive) setConfigured(Boolean(d?.configured));
       })
       .catch(() => {
@@ -177,22 +180,13 @@ export function MentorPanel({
     setError(null);
     setReview(null);
     try {
-      const res = await fetch("/api/mentor", {
+      const data = await apiRequest<Review>("/mentor/review", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId, code, title, type, testOutput }),
-      });
-      const data = await res.json();
-      if (!res.ok || data?.error) {
-        setError(
-          (data && typeof data.message === "string" && data.message) ||
-            "AI-ментор сейчас недоступен. Попробуй позже."
-        );
-        return;
-      }
-      setReview(data as Review);
-    } catch {
-      setError("Не удалось связаться с AI-ментором. Проверь соединение.");
+      }, true);
+      setReview(data);
+    } catch (err) {
+      setError(err instanceof AuthError && err.status === 401 ? "Войди в аккаунт, чтобы запросить review." : err instanceof Error ? err.message : "Не удалось связаться с AI-ментором. Проверь соединение.");
     } finally {
       setLoading(false);
     }
@@ -229,7 +223,7 @@ export function MentorPanel({
         >
           AI-ментор
         </span>
-        <Button
+        {user ? <Button
           hierarchy="secondary"
           size="sm"
           onClick={review_}
@@ -237,7 +231,7 @@ export function MentorPanel({
           loading={loading}
         >
           {loading ? "Разбираю решение…" : "Разбери мой код"}
-        </Button>
+        </Button> : !authLoading && <Link href={`/auth?next=${encodeURIComponent(typeof window === "undefined" ? "/go/practice" : window.location.pathname)}`} style={{ color: "var(--accent-text)", fontSize: "var(--label-sm)", textDecoration: "none" }}>Войти для review</Link>}
         {loading && (
           <span
             style={{
@@ -293,7 +287,7 @@ export function MentorPanel({
               {findings.map((f, i) => (
                 <Callout key={i} tone={calloutTone(f.severity)} title={f.title}>
                   <div style={{ ...monoTag, marginBottom: 6 }}>
-                    {f.category} · {f.severity}
+                    строка {f.lineNumber} · {f.category} · {f.severity}
                   </div>
                   <div style={{ marginBottom: 6 }}>{f.explanation}</div>
                   <div style={{ color: "var(--text-primary)" }}>

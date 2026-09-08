@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { GitHubStrategy } from './github.strategy';
 import { GoogleStrategy } from './google.strategy';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 // Only register an OAuth strategy when its credentials are present, so the app
 // boots fine without any OAuth config (email/password keeps working).
@@ -31,6 +32,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     ConfigModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ...oauthStrategies],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, ...oauthStrategies],
+  exports: [JwtAuthGuard],
 })
 export class AuthModule {}

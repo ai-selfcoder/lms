@@ -12,14 +12,31 @@ export class ProgressService {
       orderBy: { updatedAt: 'asc' },
     });
 
+    // Older clients stored Go task ids without a course prefix. Collapse those
+    // rows into the canonical `go:<id>` key so sync never leaks duplicates.
+    const merged = new Map<string, { solved: boolean; solvedAt: Date; code?: string; canonical: boolean }>();
+    for (const r of rows) {
+      const taskId = this.normalizeTaskId(r.taskId);
+      const canonical = r.taskId === taskId;
+      const existing = merged.get(taskId);
+      if (!existing) {
+        merged.set(taskId, { solved: r.solved, solvedAt: r.solvedAt, ...(r.code != null ? { code: r.code } : {}), canonical });
+        continue;
+      }
+      existing.solved = existing.solved || r.solved;
+      if (r.solvedAt < existing.solvedAt) existing.solvedAt = r.solvedAt;
+      // Prefer code from the canonical row; otherwise retain the newest row's code.
+      if (r.code != null && (!existing.canonical || canonical)) existing.code = r.code;
+      existing.canonical = existing.canonical || canonical;
+    }
+
     const solved: string[] = [];
     const solvedAt: Record<string, string> = {};
     const code: Record<string, string> = {};
-
-    for (const r of rows) {
-      if (r.solved) solved.push(r.taskId);
-      solvedAt[r.taskId] = r.solvedAt.toISOString();
-      if (r.code != null) code[r.taskId] = r.code;
+    for (const [taskId, value] of merged) {
+      if (value.solved) solved.push(taskId);
+      solvedAt[taskId] = value.solvedAt.toISOString();
+      if (value.code != null) code[taskId] = value.code;
     }
 
     return { solved, solvedAt, code };
@@ -34,39 +51,79 @@ export class ProgressService {
     ]);
     const solvedSet = new Set(dto.solved ?? []);
 
-    await this.prisma.$transaction(
-      [...taskIds].map((taskId) => {
-        const solved = dto.solved ? solvedSet.has(taskId) : true;
-        const solvedAt = dto.solvedAt?.[taskId]
-          ? new Date(dto.solvedAt[taskId])
+    // Task completion is append-only. A delayed device must never erase a
+    // verified local completion, and a draft-only request must not imply PASS.
+    await this.prisma.$transaction(async (tx) => {
+      for (const rawTaskId of taskIds) {
+        const taskId = this.normalizeTaskId(rawTaskId);
+        const incomingSolved = solvedSet.has(rawTaskId) || solvedSet.has(taskId);
+        const incomingSolvedAt = incomingSolved
+          ? this.validDate(dto.solvedAt?.[rawTaskId] ?? dto.solvedAt?.[taskId])
           : undefined;
-        const code = dto.code?.[taskId];
+        const incomingCode = dto.code?.[rawTaskId] ?? dto.code?.[taskId];
+        const current = await this.findCurrent(tx, userId, taskId);
 
-        return this.prisma.taskProgress.upsert({
-          where: { userId_taskId: { userId, taskId } },
-          create: { userId, taskId, solved, ...(solvedAt ? { solvedAt } : {}), code },
-          update: {
+        if (!current) {
+          await tx.taskProgress.create({
+            data: {
+              userId,
+              taskId,
+              solved: incomingSolved,
+              ...(incomingSolved && incomingSolvedAt ? { solvedAt: incomingSolvedAt } : {}),
+              ...(incomingCode !== undefined ? { code: incomingCode } : {}),
+            },
+          });
+          continue;
+        }
+
+        const solved = current.solved || incomingSolved;
+        const solvedAt = incomingSolvedAt && incomingSolvedAt < current.solvedAt
+          ? incomingSolvedAt
+          : current.solvedAt;
+        await tx.taskProgress.update({
+          where: { userId_taskId: { userId, taskId: current.taskId } },
+          data: {
             solved,
-            ...(solvedAt ? { solvedAt } : {}),
-            ...(code !== undefined ? { code } : {}),
+            ...(solved && solvedAt.getTime() !== current.solvedAt.getTime() ? { solvedAt } : {}),
+            ...(incomingCode !== undefined ? { code: incomingCode } : {}),
           },
         });
-      }),
-    );
+      }
+    });
 
     return this.get(userId);
   }
 
   async upsertTask(userId: string, taskId: string, dto: UpsertTaskDto) {
-    const solved = dto.solved ?? true;
-    await this.prisma.taskProgress.upsert({
-      where: { userId_taskId: { userId, taskId } },
-      create: { userId, taskId, solved, code: dto.code },
-      update: {
-        solved,
-        ...(dto.code !== undefined ? { code: dto.code } : {}),
-      },
-    });
+    const canonicalTaskId = this.normalizeTaskId(taskId);
+    const current = await this.findCurrent(this.prisma, userId, canonicalTaskId);
+    const solved = current?.solved || dto.solved === true;
+    if (!current) {
+      await this.prisma.taskProgress.create({ data: { userId, taskId: canonicalTaskId, solved, ...(dto.code !== undefined ? { code: dto.code } : {}) } });
+    } else {
+      await this.prisma.taskProgress.update({
+        where: { userId_taskId: { userId, taskId: current.taskId } },
+        data: { solved, ...(dto.code !== undefined ? { code: dto.code } : {}) },
+      });
+    }
     return this.get(userId);
+  }
+
+  private normalizeTaskId(taskId: string): string {
+    return taskId.includes(':') ? taskId : `go:${taskId}`;
+  }
+
+  private async findCurrent(client: Pick<PrismaService, 'taskProgress'>, userId: string, taskId: string) {
+    const canonical = await client.taskProgress.findUnique({ where: { userId_taskId: { userId, taskId } } });
+    if (canonical || !taskId.startsWith('go:')) return canonical;
+    // Keep using a pre-platform raw Go row when it already exists; get() will
+    // expose it under the canonical key until a data migration is run.
+    return client.taskProgress.findUnique({ where: { userId_taskId: { userId, taskId: taskId.slice(3) } } });
+  }
+
+  private validDate(value: string | undefined): Date | undefined {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date;
   }
 }

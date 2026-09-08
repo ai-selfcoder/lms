@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHmac } from "crypto";
 
 /**
  * Proxy to the Go grader. The browser never talks to the grader directly.
@@ -10,6 +11,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GRADER_URL = process.env.GRADER_URL ?? "http://localhost:8090";
+const GRADER_SYNC_SECRET = process.env.GRADER_SYNC_SECRET ?? "";
 const MAX_CODE_BYTES = 256 * 1024; // 256 KB guard
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -25,6 +27,15 @@ function graderBase() {
 
 function errorResponse(message: string, status = 502) {
   return NextResponse.json({ error: true, message }, { status });
+}
+
+function passProof(data: Record<string, unknown>) {
+  const result = data.result as { pass?: unknown; error?: unknown } | undefined;
+  const taskId = typeof data.taskId === "string" ? data.taskId : "";
+  const course = typeof data.course === "string" && data.course ? data.course : "go";
+  if (!GRADER_SYNC_SECRET || !result?.pass || result.error || !taskId) return undefined;
+  const payload = Buffer.from(JSON.stringify({ taskId: `${course}:${taskId}`, exp: Math.floor(Date.now() / 1000) + 300 })).toString("base64url");
+  return `${payload}.${createHmac("sha256", GRADER_SYNC_SECRET).update(payload).digest("base64url")}`;
 }
 
 export async function POST(req: Request) {
@@ -112,7 +123,7 @@ export async function GET(req: Request) {
         502
       );
     }
-    return NextResponse.json(data);
+    return NextResponse.json({ ...data, passProof: passProof(data) });
   } catch (err) {
     const aborted = err instanceof Error && err.name === "AbortError";
     return errorResponse(

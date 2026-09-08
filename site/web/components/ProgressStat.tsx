@@ -4,8 +4,8 @@ import { ProgressBar } from "@/ds";
 import { useProgress } from "@/lib/progress";
 
 /** Overall progress, driven by localStorage. `total` supplied by the server. */
-export function ProgressStat({ total }: { total: number }) {
-  const { count, percent } = useProgress(total);
+export function ProgressStat({ total, courseId = "go" }: { total: number; courseId?: string }) {
+  const { count, percent } = useProgress(total, courseId);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>

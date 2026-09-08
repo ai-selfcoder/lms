@@ -12,11 +12,13 @@ const GLOBAL_NAV: NavItem[] = [
   { href: "/go-basics", label: "Основы Go", match: "/go-basics" },
   { href: "/go", label: "Concurrency", match: "/go" },
   { href: "/os", label: "ОС", match: "/os" },
+  { href: "/projects", label: "Проекты", match: "/projects" },
+  { href: "/teams", label: "Команды", match: "/teams" },
 ];
 const COURSE_NAV: Record<string, NavItem[]> = {
   "go-basics": [{ href: "/go-basics/book", label: "Учебник", match: "/go-basics/book" }],
-  go: [{ href: "/go/tasks/01", label: "Практика", match: "/go/tasks" }, { href: "/go/book", label: "Учебник", match: "/go/book" }, { href: "/go/practice", label: "Задачи", match: "/go/practice" }],
-  os: [{ href: "/os", label: "Обзор", match: "/os" }, { href: "/os/sim/scheduler", label: "Симуляторы", match: "/os/sim" }],
+  go: [{ href: "/go/tasks/01", label: "Практика", match: "/go/tasks" }, { href: "/go/book", label: "Учебник", match: "/go/book" }, { href: "/go/practice", label: "Задачи", match: "/go/practice" }, { href: "/go/skills", label: "Навыки", match: "/go/skills" }, { href: "/go/interview", label: "Интервью", match: "/go/interview" }, { href: "/projects", label: "Проекты", match: "/projects" }, { href: "/teams", label: "Команды", match: "/teams" }],
+  os: [{ href: "/os", label: "Обзор", match: "/os" }, { href: "/os/labs", label: "Лаборатории", match: "/os/labs" }, { href: "/os/sim/scheduler", label: "Симулятор", match: "/os/sim" }, { href: "/projects", label: "Проекты", match: "/projects" }, { href: "/teams", label: "Команды", match: "/teams" }],
 };
 const TOTAL_TASKS = 32;
 type CourseKey = "go-basics" | "go" | "os";
@@ -25,7 +27,7 @@ function currentCourse(pathname: string): CourseKey | null { if (pathname.starts
 export function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { count } = useProgress(TOTAL_TASKS);
+  const { count } = useProgress(TOTAL_TASKS, "go");
   const { user, logout } = useAuth();
   const course = currentCourse(pathname);
   const nav = course ? COURSE_NAV[course] : GLOBAL_NAV;
@@ -36,7 +38,7 @@ export function SiteHeader() {
     <Link
       key={`${mobile ? "mobile-" : ""}${item.href}`}
       href={item.href}
-      className={pathname === item.match || pathname.startsWith(`${item.match}/`) ? "active" : ""}
+      className={item.match === "/os" ? (pathname === "/os" ? "active" : "") : (pathname === item.match || pathname.startsWith(`${item.match}/`) ? "active" : "")}
       onClick={mobile ? closeMenu : undefined}
     >
       {item.label}
