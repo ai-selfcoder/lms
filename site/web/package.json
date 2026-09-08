@@ -11,6 +11,7 @@
     "test": "vitest run",
     "qa": "node scripts/qa.mjs",
     "content:check": "node scripts/content-check.mjs",
+    "content:manifest": "node scripts/content-manifest.mjs --write",
     "smoke": "node scripts/smoke.mjs",
     "test:watch": "vitest",
     "build:playwasm": "powershell -NoProfile -ExecutionPolicy Bypass -File ../playwasm/build.ps1"

@@ -1,9 +1,11 @@
 import { readdir, readFile, access } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { checkManifest } from "./content-manifest.mjs";
 
 const content = resolve(process.cwd(), "..", "content");
 const courses = JSON.parse(await readFile(join(content, "courses.json"), "utf8"));
 const errors = [];
+errors.push(...await checkManifest());
 const exists = async (file) => access(file).then(() => true).catch(() => false);
 const semver = /^\d+\.\d+\.\d+$/;
 let changelogEntries = [];
