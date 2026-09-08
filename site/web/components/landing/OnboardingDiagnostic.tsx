@@ -80,12 +80,12 @@ export default function OnboardingDiagnostic({ nextTask }: { nextTask: string })
 
   if (active && question) {
     return (
-      <section className="diagnostic-panel" aria-labelledby="diagnostic-title">
+      <section id="diagnostic" className="diagnostic-panel" aria-labelledby="diagnostic-title">
         <div className="diagnostic-head">
           <div>
-            <div className="eyebrow">DIAGNOSTIC / {String(step + 1).padStart(2, "0")} OF 03</div>
+            <div className="eyebrow">ДИАГНОСТИКА / {String(step + 1).padStart(2, "0")} ИЗ {String(DIAGNOSTIC_QUESTIONS.length).padStart(2, "0")}</div>
             <h2 id="diagnostic-title">{question.title}</h2>
-            <p>Выбери самый близкий вариант. Это займёт около минуты.</p>
+            <p>Ответь честно: результат определит первый навык и задачу, которые быстрее всего приблизят тебя к следующему карьерному шагу.</p>
           </div>
           <button type="button" className="diagnostic-close" onClick={() => setActive(false)} aria-label="Закрыть диагностику">Закрыть</button>
         </div>
@@ -98,7 +98,7 @@ export default function OnboardingDiagnostic({ nextTask }: { nextTask: string })
             </button>
           ))}
         </div>
-        <div className="diagnostic-progress" aria-label={`Шаг ${step + 1} из 3`}>
+        <div className="diagnostic-progress" aria-label={`Шаг ${step + 1} из ${DIAGNOSTIC_QUESTIONS.length}`}>
           {DIAGNOSTIC_QUESTIONS.map((item, index) => <i key={item.id} className={index <= step ? "done" : ""} />)}
         </div>
       </section>
@@ -107,9 +107,9 @@ export default function OnboardingDiagnostic({ nextTask }: { nextTask: string })
 
   if (stored && recommendation && resultHref) {
     return (
-      <section className="diagnostic-panel diagnostic-result" aria-labelledby="diagnostic-result-title">
+      <section id="diagnostic" className="diagnostic-panel diagnostic-result" aria-labelledby="diagnostic-result-title">
         <div>
-          <div className="eyebrow">02 / YOUR ROUTE</div>
+          <div className="eyebrow">02 / СЛЕДУЮЩИЙ ШАГ</div>
           <h2 id="diagnostic-result-title">{recommendation.title}</h2>
           <p>{recommendation.reason}</p>
           <span className="diagnostic-detail">{recommendation.description}</span>
@@ -123,14 +123,13 @@ export default function OnboardingDiagnostic({ nextTask }: { nextTask: string })
   }
 
   return (
-    <section className="diagnostic-panel diagnostic-intro" aria-labelledby="diagnostic-intro-title">
+    <section id="diagnostic" className="diagnostic-panel diagnostic-intro" aria-labelledby="diagnostic-intro-title">
       <div>
-        <div className="eyebrow">02 / FIND YOUR ENTRY POINT</div>
-        <h2 id="diagnostic-intro-title">Не уверен, с чего начать?</h2>
-        <p>Ответь на три вопроса. Мы подберём первый шаг между основами Go, практикой, ОС и режимом интервью.</p>
+        <div className="eyebrow">02 / НАЙДИ СЛЕДУЮЩИЙ ШАГ</div>
+        <h2 id="diagnostic-intro-title">Какой навык быстрее увеличит твою ценность?</h2>
+        <p>Три коротких вопроса. На выходе ты получишь подходящий трек, первую задачу и понятный критерий прогресса.</p>
       </div>
       <button type="button" className="primary-action diagnostic-start" onClick={begin}>Пройти диагностику <span className="dash-arrow">↗</span></button>
     </section>
   );
 }
-

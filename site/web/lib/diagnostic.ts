@@ -1,4 +1,4 @@
-export type DiagnosticQuestionId = "experience" | "blocker" | "intent";
+export type DiagnosticQuestionId = "career" | "experience" | "blocker" | "intent";
 
 export type DiagnosticAnswers = Partial<Record<DiagnosticQuestionId, string>>;
 
@@ -18,6 +18,15 @@ export const DIAGNOSTIC_QUESTIONS: ReadonlyArray<{
   options: ReadonlyArray<{ value: string; label: string; hint: string }>;
 }> = [
   {
+    id: "career",
+    title: "Какой карьерный результат нужен в ближайшие 3 месяца?",
+    options: [
+      { value: "new-role", label: "Войти в backend / Go", hint: "Собрать базу и первое доказательство практики" },
+      { value: "promotion", label: "Получить повышение", hint: "Закрыть пробелы production-разработчика" },
+      { value: "interview", label: "Пройти сильное интервью", hint: "Тренироваться в условиях, близких к собеседованию" },
+    ],
+  },
+  {
     id: "experience",
     title: "Как ты сейчас пишешь на Go?",
     options: [
@@ -28,20 +37,11 @@ export const DIAGNOSTIC_QUESTIONS: ReadonlyArray<{
   },
   {
     id: "blocker",
-    title: "Где чаще всего возникает вопрос «почему»?",
+    title: "Что сейчас мешает зарабатывать больше?",
     options: [
-      { value: "syntax", label: "Язык и структура кода", hint: "Типы, функции, ошибки и базовые паттерны" },
-      { value: "concurrency", label: "Горутины и гонки", hint: "Каналы, select, синхронизация и утечки" },
-      { value: "systems", label: "Память и ОС", hint: "Планирование, страницы, I/O и системные вызовы" },
-    ],
-  },
-  {
-    id: "intent",
-    title: "Какой результат нужен в ближайший час?",
-    options: [
-      { value: "path", label: "Понять базу", hint: "Последовательный маршрут с короткими шагами" },
-      { value: "practice", label: "Потренировать навык", hint: "Задача, тесты и разбор попытки" },
-      { value: "interview", label: "Подготовиться к интервью", hint: "Ограниченный по времени набор задач" },
+      { value: "syntax", label: "Пробелы в базе", hint: "Типы, ошибки и структура кода требуют уверенности" },
+      { value: "concurrency", label: "Горутины и надёжность", hint: "Гонки, deadlock, утечки и поведение под нагрузкой" },
+      { value: "systems", label: "Системное мышление", hint: "Память, планирование, I/O и внутренние механизмы" },
     ],
   },
 ];
@@ -78,7 +78,11 @@ const RECOMMENDATIONS: Record<DiagnosticRoute, DiagnosticRecommendation> = {
 };
 
 export function diagnosticIsComplete(answers: DiagnosticAnswers): boolean {
-  return DIAGNOSTIC_QUESTIONS.every(({ id }) => typeof answers[id] === "string" && answers[id]!.length > 0);
+  const hasCareer = typeof answers.career === "string" && answers.career.length > 0;
+  const hasLegacyIntent = typeof answers.intent === "string" && answers.intent.length > 0;
+  return typeof answers.experience === "string" && answers.experience.length > 0
+    && typeof answers.blocker === "string" && answers.blocker.length > 0
+    && (hasCareer || hasLegacyIntent);
 }
 
 export function getDiagnosticRecommendation(answers: DiagnosticAnswers): DiagnosticRecommendation | null {
@@ -86,11 +90,8 @@ export function getDiagnosticRecommendation(answers: DiagnosticAnswers): Diagnos
 
   const experience = answers.experience;
   const blocker = answers.blocker;
-  const intent = answers.intent;
-
-  if (intent === "interview") return RECOMMENDATIONS.interview;
+  if (answers.career === "interview" || answers.intent === "interview") return RECOMMENDATIONS.interview;
   if (blocker === "systems") return RECOMMENDATIONS.os;
   if (experience === "new" || blocker === "syntax") return RECOMMENDATIONS["go-basics"];
   return RECOMMENDATIONS.go;
 }
-

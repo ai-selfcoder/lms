@@ -8,9 +8,9 @@ import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import "@/ds/styles.css";
 import "./globals.css";
 
-const TITLE = "GraphLMS — лаборатория системного программирования";
+const TITLE = "GraphLMS — инженерная лаборатория роста";
 const DESCRIPTION =
-  "Три связанных интерактивных курса: основы Go, конкурентность Go и операционные системы. Читай, запускай эксперименты, решай задачи и проверяй код.";
+  "Реальные задачи по Go, конкурентности и ОС, которые превращают обучение в доказательство инженерного навыка.";
 
 export const metadata: Metadata = {
   title: {

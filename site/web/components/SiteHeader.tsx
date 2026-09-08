@@ -10,14 +10,14 @@ import { useAuth } from "@/lib/auth";
 type NavItem = { href: string; label: string; match: string };
 const GLOBAL_NAV: NavItem[] = [
   { href: "/go-basics", label: "Основы Go", match: "/go-basics" },
-  { href: "/go", label: "Concurrency", match: "/go" },
-  { href: "/os", label: "ОС", match: "/os" },
+  { href: "/go", label: "Конкурентность Go", match: "/go" },
+  { href: "/os", label: "Операционные системы", match: "/os" },
   { href: "/projects", label: "Проекты", match: "/projects" },
   { href: "/teams", label: "Команды", match: "/teams" },
 ];
 const COURSE_NAV: Record<string, NavItem[]> = {
   "go-basics": [{ href: "/go-basics/book", label: "Учебник", match: "/go-basics/book" }],
-  go: [{ href: "/go/tasks/01", label: "Практика", match: "/go/tasks" }, { href: "/go/book", label: "Учебник", match: "/go/book" }, { href: "/go/practice", label: "Задачи", match: "/go/practice" }, { href: "/go/skills", label: "Навыки", match: "/go/skills" }, { href: "/go/interview", label: "Интервью", match: "/go/interview" }, { href: "/projects", label: "Проекты", match: "/projects" }, { href: "/teams", label: "Команды", match: "/teams" }],
+  go: [{ href: "/go/tasks/01", label: "Практика", match: "/go/tasks" }, { href: "/go/book", label: "Учебник", match: "/go/book" }, { href: "/go/practice", label: "Задачи", match: "/go/practice" }, { href: "/go/skills", label: "Доказательства", match: "/go/skills" }, { href: "/go/interview", label: "Интервью", match: "/go/interview" }, { href: "/projects", label: "Проекты", match: "/projects" }, { href: "/teams", label: "Команды", match: "/teams" }],
   os: [{ href: "/os", label: "Обзор", match: "/os" }, { href: "/os/labs", label: "Лаборатории", match: "/os/labs" }, { href: "/os/sim/scheduler", label: "Симулятор", match: "/os/sim" }, { href: "/projects", label: "Проекты", match: "/projects" }, { href: "/teams", label: "Команды", match: "/teams" }],
 };
 const TOTAL_TASKS = 32;
@@ -31,7 +31,7 @@ export function SiteHeader() {
   const { user, logout } = useAuth();
   const course = currentCourse(pathname);
   const nav = course ? COURSE_NAV[course] : GLOBAL_NAV;
-  const courseName = course === "go" ? "Go / Concurrency" : course === "os" ? "Operating systems" : course === "go-basics" ? "Go basics" : null;
+  const courseName = course === "go" ? "Конкурентность Go" : course === "os" ? "Операционные системы" : course === "go-basics" ? "Основы Go" : null;
 
   const closeMenu = () => setMenuOpen(false);
   const navLink = (item: NavItem, mobile = false) => (
@@ -55,7 +55,7 @@ export function SiteHeader() {
     {user ? <>
       <Link href="/account" className="user-chip" title="Личный кабинет"><span>{user.email.slice(0, 1).toUpperCase()}</span><b>{user.email}</b></Link>
       <button className="logout-button" type="button" onClick={logout}>Выйти</button>
-    </> : <div className="guest-actions"><Link href="/account" className="account-link">Кабинет</Link><Link href="/auth" className="login-link">Войти</Link><Link href="/go/tasks/01" className="header-cta">Начать</Link></div>}
+    </> : <div className="guest-actions"><Link href="/account" className="account-link">Кабинет</Link><Link href="/auth" className="login-link">Войти</Link><Link href="/#diagnostic" className="header-cta">Пройти диагностику</Link></div>}
     <button
       type="button"
       className="mobile-menu-toggle"
