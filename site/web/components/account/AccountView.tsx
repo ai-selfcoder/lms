@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Callout, ProgressBar } from "@/ds";
-import { useProgress, useSolvedHistory, useLearningEvents } from "@/lib/progress";
-import { useAuth } from "@/lib/auth";
+import { recordLearningEvent, useProgress, useSolvedHistory, useLearningEvents } from "@/lib/progress";
+import { getEntitlements, useAuth, type EntitlementSnapshot } from "@/lib/auth";
 
 interface TopicItem {
   num: number;
@@ -96,6 +96,8 @@ export function AccountView({
   const history = useSolvedHistory("go");
   const events = useLearningEvents();
   const { user, logout } = useAuth();
+  const [entitlements, setEntitlements] = useState<EntitlementSnapshot | null>(null);
+  useEffect(() => { if (user) void getEntitlements().then(setEntitlements).catch(() => setEntitlements(null)); }, [user]);
 
   const byId = useMemo(() => {
     const m = new Map<string, TaskItem>();
@@ -201,7 +203,15 @@ export function AccountView({
         .account-recent-row:hover,
         .account-sprint-row:hover,
         .account-repeat-row:hover { background: var(--bg-hover); }
+        .account-entitlement { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 16px; margin-bottom:24px; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-elevated); }
+        .account-entitlement span { display:block; color:var(--text-tertiary); font:10px var(--font-mono); letter-spacing:.08em; }
+        .account-entitlement strong { display:block; margin-top:5px; color:var(--text-primary); font-size:15px; }
+        .account-entitlement p { margin:4px 0 0; color:var(--text-secondary); font-size:12px; }
+        .account-entitlement-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .account-entitlement a, .account-entitlement button { color:var(--accent-text); font:12px var(--font-mono); text-decoration:none; white-space:nowrap; }
+        .account-entitlement button { padding:0; border:0; background:transparent; cursor:pointer; }
         @media (max-width: 680px) {
+          .account-entitlement { align-items:flex-start; flex-direction:column; }
           .account-page { padding: 28px 16px 56px !important; }
           .account-page h1 { font-size: 30px !important; }
           .account-topic-row { grid-template-columns: 24px minmax(0, 1fr) 58px !important; gap: 8px !important; }
@@ -321,6 +331,7 @@ export function AccountView({
       </div>
 
       {/* NEXT ACTION */}
+      {user && <section className="account-entitlement" aria-label="Тариф и доступ"><div><span>ДОСТУП</span><strong>{entitlements?.plans.includes("PRO") ? "Pro" : entitlements?.plans.includes("TEAM") ? "Team" : "Free"}</strong><p>{entitlements?.plans.includes("PRO") ? "Открыты полные skill tracks, проекты и interview mode." : "Диагностика, базовая теория и первый доказанный результат доступны без paywall."}</p></div><div className="account-entitlement-actions"><Link href="/account/report">Проверить evidence ↗</Link>{!entitlements?.plans.includes("PRO") && <button type="button" onClick={() => recordLearningEvent("checkout_started", "pro", { eventId: `checkout_started:${Date.now()}` })}>Запросить Pro доступ ↗</button>}</div></section>}
       <section
         aria-labelledby="next-action-title"
         style={{

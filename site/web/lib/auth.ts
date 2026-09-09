@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getLearningEvents, learningEventsBelongTo, mergeServerProgress, prepareLearningEventsForUser, type ProgressSnapshot } from "@/lib/progress";
+import { getLearningEvents, learningEventsBelongTo, mergeServerProgress, prepareLearningEventsForUser, recordLearningEvent, type ProgressSnapshot } from "@/lib/progress";
 import { isAnalyticsOptedOut } from "@/lib/privacy";
 
 const AUTH_EVENT = "goroutine:auth-changed";
@@ -91,6 +91,7 @@ export async function login(email: string, password: string): Promise<AuthUser> 
 export async function register(email: string, password: string, level?: AuthLevel): Promise<AuthUser> {
   const user = await request<{ user: AuthUser }>("/auth/register", { method: "POST", body: JSON.stringify(level ? { email, password, level } : { email, password }) });
   await syncProgress();
+  recordLearningEvent("account_created", "account", { eventId: "account_created" });
   prepareLearningEventsForUser(user.user.id);
   if (await syncLearningEvents(user.user.id)) syncedEventUsers.add(user.user.id);
   window.dispatchEvent(new Event(AUTH_EVENT));
@@ -132,6 +133,19 @@ export async function syncLearningEvents(userId?: string): Promise<boolean> {
 /** Redeem a short-lived grader proof for a server-side product entitlement. */
 export async function confirmTaskPass(taskId: string, proof: string): Promise<void> {
   await request("/me/task-passes", { method: "POST", body: JSON.stringify({ taskId, proof }) }, true);
+}
+
+export interface EntitlementSnapshot {
+  plans: Array<"FREE" | "PRO" | "TEAM" | "REVIEW_ADDON">;
+  entitlements: Array<{ plan: string; source: string; startsAt: string; endsAt?: string | null }>;
+}
+
+export async function getEntitlements(): Promise<EntitlementSnapshot> {
+  return request<EntitlementSnapshot>("/me/entitlements", { method: "GET" }, true);
+}
+
+export async function setCareerGoal(goal: string): Promise<{ goal: string; updatedAt?: string }> {
+  return request<{ goal: string; updatedAt?: string }>("/me/career-goal", { method: "PUT", body: JSON.stringify({ goal }) }, true);
 }
 
 export function useAuth() {

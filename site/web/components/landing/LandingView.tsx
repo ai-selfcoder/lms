@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useLearningEvents, useProgress } from "@/lib/progress";
+import { recordLearningEvent, useLearningEvents, useProgress } from "@/lib/progress";
+import { setCareerGoal, useAuth } from "@/lib/auth";
 import { getDiagnosticRecommendation, type DiagnosticAnswers } from "@/lib/diagnostic";
 import OnboardingDiagnostic from "./OnboardingDiagnostic";
 
@@ -16,10 +17,12 @@ function Difficulty({ diff }: { diff: TopicProp["diff"] }) { return <span classN
 export default function LandingView({ taskCount, chapterCount, firstTaskSlug, topics, chapters, courses }: { taskCount: number; chapterCount: number; firstTaskSlug: string | null; topics: TopicProp[]; chapters: ChapterProp[]; courses: CourseProp[] }) {
   const { count, isSolved } = useProgress(taskCount, "go");
   const events = useLearningEvents();
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [goal, setGoal] = useState("go");
   const [diagnosticRoute, setDiagnosticRoute] = useState<string | null>(null);
   useEffect(() => {
+    recordLearningEvent("landing_view", "landing", { eventId: "landing_view:home" });
     try {
       setGoal(window.localStorage.getItem("graphlms.goal.v1") ?? "go");
       const raw = window.localStorage.getItem("graphlms.diagnostic.v1");
@@ -32,6 +35,8 @@ export default function LandingView({ taskCount, chapterCount, firstTaskSlug, to
   const chooseGoal = (value: string) => {
     setGoal(value);
     try { window.localStorage.setItem("graphlms.goal.v1", value); } catch { /* private mode */ }
+    recordLearningEvent("goal_selected", `goal:${value}`, { eventId: `goal_selected:${value}`, meta: { goal: value } });
+    if (user) void setCareerGoal(value).catch(() => { /* local goal remains authoritative during an offline session */ });
   };
   const percent = taskCount ? Math.round((count / taskCount) * 100) : 0;
   const filtered = useMemo(() => topics.filter((t) => t.label.toLowerCase().includes(query.toLowerCase())), [topics, query]);
@@ -63,7 +68,7 @@ export default function LandingView({ taskCount, chapterCount, firstTaskSlug, to
 
     <OnboardingDiagnostic nextTask={nextTask} />
 
-    <section className="overview-grid" aria-label="Прогресс"><div className="overview-progress surface-panel"><div className="panel-label"><span>ТЕКУЩИЙ ПРОГРЕСС</span><Link href="/account">Открыть профиль <Arrow /></Link></div><div className="progress-number"><strong>{count}</strong><span>из {taskCount} задач</span><b>{percent}%</b></div><div className="progress-line"><i style={{ width: `${percent}%` }} /></div><div className="progress-meta"><span>{count ? `Следующая: ${nextTopic?.label ?? "задача"}` : "Начни с первой задачи и собери серию"}</span><span>PASS-проверок: {count}</span></div></div>
+    <section className="overview-grid" aria-label="Прогресс"><div className="overview-progress surface-panel"><div className="panel-label"><span>ТЕКУЩИЙ ПРОГРЕСС</span><span style={{ display: "inline-flex", gap: 12 }}><Link href="/account/report">Skill report <Arrow /></Link><Link href="/account">Открыть профиль <Arrow /></Link></span></div><div className="progress-number"><strong>{count}</strong><span>из {taskCount} задач</span><b>{percent}%</b></div><div className="progress-line"><i style={{ width: `${percent}%` }} /></div><div className="progress-meta"><span>{count ? `Следующая: ${nextTopic?.label ?? "задача"}` : "Начни с первой задачи и собери серию"}</span><span>PASS-проверок: {count}</span></div></div>
       <Link className="next-task surface-panel" href={trainerHref}><div className="panel-label"><span>СЛЕДУЮЩИЙ ШАГ</span><Arrow /></div><div className="next-index">{String(nextTopic?.num ?? 1).padStart(2, "0")} / ТЕМА</div><strong>{nextTopic?.label ?? "Каналы и select"}</strong><span>{count ? "Продолжить с места, где остановился" : "Напиши первый worker pool"}</span></Link>
       <div className="overview-stat surface-panel"><span className="stat-big">{chapterCount}</span><span>глав в учебнике</span><Link href="/go/book">Читать главы <Arrow /></Link></div></section>
 
@@ -72,5 +77,7 @@ export default function LandingView({ taskCount, chapterCount, firstTaskSlug, to
     <section className="catalog-block"><div className="section-head"><div><div className="eyebrow">02 / ПРАКТИКА</div><h2>Карта трека Go</h2><p>От первых горутин до production-паттернов.</p></div><label className="search-field"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Найти топик" /></label></div><div className="topic-table"><div className="topic-table-head"><span>#</span><span>Топик</span><span>Прогресс</span><span>Сложность</span></div>{filtered.map((topic) => { const solved = topic.taskIds.filter((id) => isSolved(id, "go")).length; const first = topic.taskIds.find((id) => !isSolved(id, "go")) ?? topic.taskIds[0] ?? "01"; return <Link className="topic-table-row" key={topic.num} href={`/go/tasks/${first}`}><span className="topic-no">{String(topic.num).padStart(2, "0")}</span><span className="topic-name"><strong>{topic.label}</strong><small>{topic.taskCount} задач {topic.isReview ? "· проверка кода" : "· практика"}</small></span><span className="topic-progress-cell"><span className="mini-progress"><i style={{ width: `${topic.taskCount ? (solved / topic.taskCount) * 100 : 0}%` }} /></span><small>{solved}/{topic.taskCount}</small></span><span className="topic-difficulty"><Difficulty diff={topic.diff} /><Arrow /></span></Link>; })}</div></section>
 
     <section className="chapters-block"><div className="section-head"><div><div className="eyebrow">03 / СПРАВОЧНИК</div><h2>Учебник по конкурентности</h2><p>Справочник, к которому возвращаются.</p></div><Link className="quiet-action" href="/go/book">Все главы <Arrow /></Link></div><div className="chapter-grid">{chapters.slice(0, 6).map((chapter, i) => <Link className="chapter-tile" href={`/go/book/${chapter.slug}`} key={chapter.slug}><span>{String(i + 1).padStart(2, "0")}</span><strong>{chapter.title}</strong><small>Глава {i + 1} · 12 мин</small></Link>)}</div></section>
+
+    <section className="failure-entry-block"><div className="section-head"><div><div className="eyebrow">04 / FAILURE-DRIVEN</div><h2>Начни с проблемы из production</h2><p>Каждый вход ведёт прямо в runnable-эксперимент и PASS.</p></div></div><div className="failure-entry-grid">{[{ slug: "race-conditions", label: "Race conditions" }, { slug: "deadlocks", label: "Deadlocks" }, { slug: "goroutine-leaks", label: "Goroutine leaks" }, { slug: "graceful-shutdown", label: "Graceful shutdown" }].map((entry) => <Link key={entry.slug} href={`/problems/${entry.slug}`}><span>{entry.label}</span><b>failure → experiment → proof ↗</b></Link>)}</div></section>
   </div>;
 }

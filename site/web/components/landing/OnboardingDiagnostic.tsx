@@ -54,7 +54,7 @@ export default function OnboardingDiagnostic({ nextTask }: { nextTask: string })
     setActive(true);
     setStep(0);
     setAnswers({});
-    recordLearningEvent("started", "onboarding:diagnostic", { eventId: "started:onboarding:diagnostic" });
+    recordLearningEvent("diagnostic_started", "onboarding:diagnostic", { eventId: "diagnostic_started:onboarding" });
   };
 
   const choose = (id: DiagnosticQuestionId, value: string) => {
@@ -72,8 +72,8 @@ export default function OnboardingDiagnostic({ nextTask }: { nextTask: string })
     }
     setStored({ answers: next, completedAt: finishedAt });
     setActive(false);
-    recordLearningEvent("completed", "onboarding:diagnostic", {
-      eventId: "completed:onboarding:diagnostic",
+    recordLearningEvent("diagnostic_completed", "onboarding:diagnostic", {
+      eventId: "diagnostic_completed:onboarding",
       meta: { route: getDiagnosticRecommendation(next)?.route ?? "go" },
     });
   };

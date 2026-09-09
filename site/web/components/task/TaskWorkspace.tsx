@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useProgress, loadCode, saveCode, clearCode, recordLearningEvent, recordTaskAttempt, useTaskAttempts } from "@/lib/progress";
+import { useProgress, loadCode, saveCode, clearCode, getLearningEvents, recordLearningEvent, recordTaskAttempt, useTaskAttempts } from "@/lib/progress";
 import { useInterviewSession } from "@/lib/interview";
-import { confirmTaskPass, useAuth } from "@/lib/auth";
+import { apiRequest, confirmTaskPass, useAuth } from "@/lib/auth";
 import { AnalyticsPreferences } from "@/components/Analytics";
 import { Button, Logo } from "@/ds";
 import { TaskNav } from "./TaskNav";
@@ -90,6 +90,7 @@ export function TaskWorkspace({
   const attemptCodeRef = useRef(task.starter);
   const attemptTokenRef = useRef<string | null>(null);
   const recordedAttemptRef = useRef<string | null>(null);
+  const reportedPassRef = useRef<string | null>(null);
   const job = useGradeJob();
   const { reset: resetJob, start: startJob } = job;
   const running = job.phase === "queued" || job.phase === "running";
@@ -106,6 +107,9 @@ export function TaskWorkspace({
     recordedAttemptRef.current = null;
     resetJob();
     recordLearningEvent("started", task.id, { courseId: course, eventId: `started:${course}:${task.id}` });
+    if (!getLearningEvents().some((event) => event.type === "first_task_started")) {
+      recordLearningEvent("first_task_started", `${course}:${task.id}`, { courseId: course, eventId: "first_task_started" });
+    }
   }, [task.id, task.starter, course, resetJob]);
 
   const handleChange = useCallback(
@@ -144,11 +148,13 @@ export function TaskWorkspace({
         durationMs: job.result.durationMs ?? 0,
         summary,
       });
+      recordLearningEvent("feedback", task.id, { courseId: course });
       recordedAttemptRef.current = attemptTokenRef.current;
     }
     if (job.phase === "done" && job.result?.pass && !job.result.error) {
       markSolved(task.id, course);
       recordLearningEvent("passed", task.id, { courseId: course });
+      recordLearningEvent("first_pass", task.id, { courseId: course, eventId: `first_pass:${course}:${task.id}` });
       recordLearningEvent("completed", task.id, { courseId: course, eventId: `completed:${course}:${task.id}` });
     } else if (job.phase === "done" && job.result && !job.result.pass) {
       recordLearningEvent("failed", task.id, { courseId: course });
@@ -157,10 +163,16 @@ export function TaskWorkspace({
 
   useEffect(() => {
     if (!user || !confirmedPassProof || !result?.pass || result.error) return;
-    void confirmTaskPass(`${course}:${task.id}`, confirmedPassProof).catch(() => {
+    const reportKey = `${course}:${task.id}:${confirmedPassProof}`;
+    if (reportedPassRef.current === reportKey) return;
+    reportedPassRef.current = reportKey;
+    void confirmTaskPass(`${course}:${task.id}`, confirmedPassProof).then(() => apiRequest("/me/reports", {
+      method: "POST",
+      body: JSON.stringify({ title: `Verified skill: ${task.title}`, skills: [{ course, taskId: task.id, title: task.title, difficulty: task.type ?? "practice", passedAt: new Date().toISOString() }] }),
+    }, true)).catch(() => {
       // Local completion remains valid; the notes panel explains a delayed sync.
     });
-  }, [confirmedPassProof, course, result?.error, result?.pass, task.id, user]);
+  }, [confirmedPassProof, course, result?.error, result?.pass, task.id, task.title, task.type, user]);
 
   return (
     <div
@@ -352,6 +364,25 @@ export function TaskWorkspace({
               resetJob();
             }}
           />
+          {result?.pass && !result.error && (
+            <section className="pass-evidence-panel" aria-labelledby="pass-evidence-title">
+              <div>
+                <span className="pass-evidence-kicker">VERIFIED SKILL · PASS</span>
+                <h2 id="pass-evidence-title">Доказательство сохранено</h2>
+                <p>Задача «{task.title}» подтверждена проверками. Это evidence для backend/system engineering, а не сертификат.</p>
+                <div className="pass-evidence-checks">
+                  <span>{result.summary ? `${result.summary.passed}/${result.summary.total} тестов пройдено` : "grader PASS"}</span>
+                  <span>{result.race === false ? "race checks включены" : "проверка инвариантов завершена"}</span>
+                </div>
+              </div>
+              <div className="pass-evidence-actions">
+                <Link href="/account/report">Открыть skill report ↗</Link>
+                <Link href="/projects">Собрать проектный артефакт ↗</Link>
+                <Link href="/go/interview">Подготовиться к интервью ↗</Link>
+                {next && <Link href={`/${course}/tasks/${next.slug}`}>Закрыть следующий пробел ↗</Link>}
+              </div>
+            </section>
+          )}
         </main>
 
         {/* right: description tabs */}
@@ -393,6 +424,7 @@ export function TaskWorkspace({
         .task-shell > header > div:last-child a { display: none; }
         .task-analytics-preferences { display: none; }
       }`}</style>
+      <style>{`.pass-evidence-panel{display:flex;justify-content:space-between;gap:20px;padding:16px 18px;border-top:1px solid rgba(57,217,138,.35);background:#101c18;color:var(--text-primary)}.pass-evidence-kicker{display:block;color:#39d98a;font:10px var(--font-mono);letter-spacing:.08em}.pass-evidence-panel h2{margin:6px 0 4px;font-size:15px}.pass-evidence-panel p{max-width:620px;margin:0;color:var(--text-secondary);font-size:12px;line-height:1.45}.pass-evidence-checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;color:#9ee7bc;font:11px var(--font-mono)}.pass-evidence-checks span{padding:4px 7px;border:1px solid rgba(57,217,138,.3);border-radius:4px}.pass-evidence-actions{display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:190px}.pass-evidence-actions a{color:#9ec1ff;font-size:12px;text-decoration:none;white-space:nowrap}.pass-evidence-actions a:hover{text-decoration:underline}@media(max-width:700px){.pass-evidence-panel{flex-direction:column}.pass-evidence-actions{align-items:flex-start;min-width:0}}`}</style>
     </div>
   );
 }

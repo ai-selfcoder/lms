@@ -252,12 +252,27 @@ export function useTaskAttempts(taskId: string, courseId?: string): TaskAttempt[
 }
 
 export type LearningEventType =
+  | "landing_view"
+  | "goal_selected"
+  | "diagnostic_started"
+  | "diagnostic_completed"
+  | "first_task_started"
   | "started"
   | "run"
+  | "feedback"
+  | "first_pass"
   | "failed"
   | "passed"
   | "hint"
-  | "completed";
+  | "completed"
+  | "topic_completed"
+  | "artifact_saved"
+  | "report_created"
+  | "report_shared"
+  | "account_created"
+  | "checkout_started"
+  | "subscription_started"
+  | "cancelled";
 
 export interface LearningEvent {
   id: string;

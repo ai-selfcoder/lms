@@ -129,6 +129,25 @@ curl -s -X PUT http://localhost:4000/me/progress/hello \
   -d '{"solved":true,"code":"package main"}'
 ```
 
+### Product profile, entitlements and skill reports
+
+These authenticated endpoints provide the career goal and the manual billing
+foundation. `FREE` is always included; `PRO`, `TEAM`, and `REVIEW_ADDON` can be
+granted by an operator through the `Entitlement` table while checkout is being
+validated.
+
+```text
+GET  /me/entitlements       -> active plans and their sources
+PUT  /me/career-goal        -> {"goal":"promotion"}
+GET  /me/reports/latest     -> latest verified skill report (or null)
+POST /me/reports            -> create a report from confirmed task passes
+POST /me/reports/:id/share  -> {"isPublic":true|false}
+GET  /reports/share/:token  -> public report (no source code)
+```
+
+Reports contain confirmed task identifiers, pass timestamps, role context and
+the next recommended gap. Sharing is private by default.
+
 ### Task discussions
 
 Comments are scoped to a namespaced task id such as `go:01` or `os:01`. Reading is
@@ -161,7 +180,11 @@ becoming a solution dump. A learner has one editable note per task.
 
 Events are client-generated and idempotent by `id`; posting the same event again is
 safe. The API accepts at most 100 events per request. Supported types are
-`started`, `run`, `failed`, `passed`, `hint`, and `completed`.
+`landing_view`, `goal_selected`, `diagnostic_started`, `diagnostic_completed`,
+`first_task_started`, `started`, `run`, `feedback`, `first_pass`, `failed`,
+`passed`, `hint`, `completed`, `topic_completed`, `artifact_saved`,
+`report_created`, `report_shared`, `account_created`, `checkout_started`,
+`subscription_started`, and `cancelled`.
 
 ```bash
 curl -s -X POST http://localhost:4000/me/events \

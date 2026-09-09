@@ -1,7 +1,13 @@
 import { ArrayMaxSize, IsArray, IsDateString, IsIn, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export const LEARNING_EVENT_TYPES = ['started', 'run', 'failed', 'passed', 'hint', 'completed'] as const;
+export const LEARNING_EVENT_TYPES = [
+  'landing_view', 'goal_selected', 'diagnostic_started', 'diagnostic_completed',
+  'first_task_started', 'started', 'run', 'feedback', 'first_pass', 'passed',
+  'failed', 'hint', 'completed', 'topic_completed', 'artifact_saved',
+  'report_created', 'report_shared', 'account_created', 'checkout_started',
+  'subscription_started', 'cancelled',
+] as const;
 
 export class LearningEventDto {
   @IsString()

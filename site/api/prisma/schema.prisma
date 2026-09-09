@@ -27,6 +27,11 @@ model User {
   learningEvents LearningEvent[]
   ownedTeams    Team[]       @relation("TeamOwner")
   teamMemberships TeamMember[]
+  entitlements Entitlement[]
+  careerProfile CareerProfile?
+  skillReports SkillReport[]
+  checkoutIntents CheckoutIntent[]
+  teamBaselines TeamBaselineAssessment[]
 
   @@unique([provider, providerId])
 }
@@ -62,14 +67,80 @@ model TaskSolutionNote {
 // Created only by the server-side grading proxy after a grader PASS. Product
 // entitlements use this record, never optional analytics events from a client.
 model TaskPass {
-  id       String   @id @default(cuid())
-  userId   String
-  taskId   String
-  passedAt DateTime @default(now())
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  userId          String
+  taskId          String
+  courseId        String   @default("go")
+  taskTitle       String?
+  taskSlug        String?
+  difficulty      String?
+  testsPassed     Int?
+  testsTotal      Int?
+  graderLatencyMs Int?
+  firstAttemptAt  DateTime?
+  lastAttemptAt   DateTime?
+  passedAt        DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, taskId])
   @@index([taskId, passedAt])
+}
+
+model Entitlement {
+  id        String   @id @default(cuid())
+  userId    String
+  plan      String
+  source    String   @default("manual")
+  startsAt  DateTime @default(now())
+  endsAt    DateTime?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active, plan])
+}
+
+model CareerProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  goal      String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SkillReport {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique @default(cuid())
+  title       String
+  goal        String?
+  payloadJson String
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([token, isPublic])
+}
+
+// A checkout intent is separate from payment state. It measures pricing
+// demand before a provider is connected, without presenting a manual grant as
+// an active subscription.
+model CheckoutIntent {
+  id              String   @id @default(cuid())
+  userId          String
+  plan            String
+  priceHypothesis String?
+  status          String   @default("open")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([plan, status, createdAt])
 }
 
 model TaskProgress {
@@ -111,6 +182,7 @@ model Team {
   owner     User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members   TeamMember[]
   tracks    TeamTrack[]
+  baselines TeamBaselineAssessment[]
 
   @@index([ownerId, createdAt])
 }
@@ -125,6 +197,23 @@ model TeamMember {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
+  @@index([userId, createdAt])
+}
+
+// A point-in-time team progress snapshot. It stores task ids and counts only,
+// so managers can measure growth without accessing submitted source code.
+model TeamBaselineAssessment {
+  id          String   @id @default(cuid())
+  teamId      String
+  userId      String
+  taskIdsJson String
+  passedCount Int      @default(0)
+  totalCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, createdAt])
   @@index([userId, createdAt])
 }
 

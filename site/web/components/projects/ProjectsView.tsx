@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useLearningEvents, useProgress } from "@/lib/progress";
+import { recordLearningEvent, useLearningEvents, useProgress } from "@/lib/progress";
 import { saveProjectArtifact, useProjectArtifacts } from "@/lib/projectArtifacts";
 import type { ProjectStep, ProjectTrack } from "@/lib/projectTracks";
 
@@ -56,7 +56,7 @@ export function ProjectsView({ tracks }: { tracks: ProjectTrack[] }) {
           <span>{artifact?.status === "verified" ? "АРТЕФАКТ ЗАФИКСИРОВАН" : artifact ? "АРТЕФАКТ В РАБОТЕ" : "АРТЕФАКТ НЕ ЗАФИКСИРОВАН"}</span>
           <button type="button" onClick={() => { setEditingTrack(track.id); setEvidence(artifact?.evidence ?? ""); }}>{artifact ? "Изменить доказательство" : "Добавить доказательство"}</button>
         </div>
-        {editingTrack === track.id && <form className="project-artifact-form" onSubmit={(event) => { event.preventDefault(); saveProjectArtifact({ trackId: track.id, status: complete ? "verified" : "draft", evidence }); setEditingTrack(null); }}><textarea value={evidence} onChange={(event) => setEvidence(event.target.value)} placeholder="Что работает и чем ты это проверил?" maxLength={2000} rows={3} /><div><button type="button" onClick={() => setEditingTrack(null)}>Отмена</button><button type="submit">Сохранить</button></div></form>}
+        {editingTrack === track.id && <form className="project-artifact-form" onSubmit={(event) => { event.preventDefault(); saveProjectArtifact({ trackId: track.id, status: complete ? "verified" : "draft", evidence }); recordLearningEvent("artifact_saved", `project:${track.id}`, { eventId: `artifact_saved:${track.id}` }); setEditingTrack(null); }}><textarea value={evidence} onChange={(event) => setEvidence(event.target.value)} placeholder="Что работает и чем ты это проверил?" maxLength={2000} rows={3} /><div><button type="button" onClick={() => setEditingTrack(null)}>Отмена</button><button type="submit">Сохранить</button></div></form>}
         <Link className="project-cta" href={next?.href ?? track.steps[track.steps.length - 1].href}>{complete ? "Открыть трек ещё раз" : "Продолжить трек"}<span aria-hidden="true">→</span></Link>
       </section>;
       })}

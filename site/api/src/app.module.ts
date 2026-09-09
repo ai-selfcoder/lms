@@ -9,6 +9,7 @@ import { DiscussionsModule } from './discussions/discussions.module';
 import { EventsModule } from './events/events.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { TeamsModule } from './teams/teams.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TeamsModule } from './teams/teams.module';
     EventsModule,
     LeaderboardModule,
     TeamsModule,
+    ProductModule,
   ],
 })
 export class AppModule {}

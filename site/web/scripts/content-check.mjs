@@ -9,7 +9,7 @@ errors.push(...await checkManifest());
 const exists = async (file) => access(file).then(() => true).catch(() => false);
 const semver = /^\d+\.\d+\.\d+$/;
 let changelogEntries = [];
-const routes = new Set(["/", "/account", "/account/report", "/auth", "/projects", "/teams", "/changelog", "/go", "/go/book", "/go/practice", "/go/skills", "/go/interview", "/go/topics", "/os", "/os/book", "/os/labs", "/os/sim/scheduler"]);
+const routes = new Set(["/", "/account", "/account/report", "/auth", "/projects", "/teams", "/changelog", "/go", "/go/book", "/go/practice", "/go/skills", "/go/interview", "/go/topics", "/os", "/os/book", "/os/labs", "/os/sim/scheduler", "/problems/race-conditions", "/problems/deadlocks", "/problems/goroutine-leaks", "/problems/graceful-shutdown"]);
 const linkRefs = [];
 const normalizeRoute = (href) => {
   const clean = href.replace(/[?#].*$/, "").replace(/\/$/, "") || "/";
